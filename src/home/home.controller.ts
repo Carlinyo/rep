@@ -1,10 +1,9 @@
-import { Controller, Get, Render } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 
 @Controller('home')
 export class HomeController {
     @Get('/home')
-    @Render('home')
     getHomePage(){
-        return { message:'Im in home page' }
+        return 'Im in home page' 
     }
 }

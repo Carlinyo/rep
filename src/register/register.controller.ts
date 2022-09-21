@@ -1,10 +1,20 @@
-import { Controller, Get, Render } from '@nestjs/common';
+import { Body, Controller, Get, Post, RawBodyRequest } from '@nestjs/common';
+import { UserDto } from 'src/dto/app.dto';
+import { RegisterService } from './register.service';
 
-@Controller('register')
+@Controller()
 export class RegisterController {
-    @Get('/register')
-    @Render('register')
+    constructor(private regService:RegisterService){}
+    @Get('/')
     getRegisterPage(){
-        return { message:'Im in register page' }
+        return "Im in Register Page"
+    }
+    @Post('/addUser')
+    addUser(@Body() body:RawBodyRequest<UserDto>) {
+        this.regService.registerUser(body)
+    }
+    @Get('/getGroups')
+    async getGroups() {
+       await this.regService.getGroups()
     }
 }

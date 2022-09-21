@@ -12,4 +12,8 @@ export class User {
   lastName: string;
   @Column()
   email: string;
+  @Column()
+  active: number;
+  @Column()
+  groupId: number;
 }
