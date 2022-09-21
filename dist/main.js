@@ -175,7 +175,7 @@ async function bootstrap() {
     });
     app.setViewEngine({
         engine: {
-            handlebars: __webpack_require__(17),
+            handlebars: __webpack_require__(25),
         },
         templates: (0, path_1.join)(__dirname, '..', 'views'),
     });
@@ -227,13 +227,27 @@ const common_1 = __webpack_require__(8);
 const typeorm_1 = __webpack_require__(9);
 const app_controller_1 = __webpack_require__(10);
 const app_service_1 = __webpack_require__(11);
-const user_entity_1 = __webpack_require__(12);
-const user_module_1 = __webpack_require__(14);
+const messages_entity_1 = __webpack_require__(12);
+const user_entity_1 = __webpack_require__(14);
+const register_service_1 = __webpack_require__(15);
+const register_controller_1 = __webpack_require__(16);
+const register_module_1 = __webpack_require__(17);
+const login_controller_1 = __webpack_require__(18);
+const login_module_1 = __webpack_require__(19);
+const home_controller_1 = __webpack_require__(21);
+const home_module_1 = __webpack_require__(22);
+const nest_router_1 = __webpack_require__(24);
+const routes = [
+    { path: "", LoginController: login_controller_1.LoginController },
+    { path: "register", RegisterController: register_controller_1.RegisterController },
+    { path: "home", HomeController: home_controller_1.HomeController },
+];
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            nest_router_1.RouterModule.forRoutes(routes),
             typeorm_1.TypeOrmModule.forRoot({
                 type: "mysql",
                 host: "localhost",
@@ -241,13 +255,20 @@ AppModule = __decorate([
                 username: "root",
                 password: "asdasd123",
                 database: "chat_db",
-                entities: [user_entity_1.User],
+                entities: [user_entity_1.User, messages_entity_1.Messages],
                 synchronize: true,
             }),
-            user_module_1.UserModule,
+            register_module_1.RegisterModule,
+            login_module_1.LoginModule,
+            home_module_1.HomeModule
         ],
-        controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
+        controllers: [
+            app_controller_1.AppController,
+            register_controller_1.RegisterController,
+            login_controller_1.LoginController,
+            home_controller_1.HomeController,
+        ],
+        providers: [app_service_1.AppService, register_service_1.RegisterService],
     })
 ], AppModule);
 exports.AppModule = AppModule;
@@ -371,6 +392,52 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Messages = void 0;
+const typeorm_1 = __webpack_require__(13);
+class Messages {
+}
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
+], Messages.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Messages.prototype, "fromId", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Messages.prototype, "toId", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Messages.prototype, "message", void 0);
+exports.Messages = Messages;
+
+
+/***/ }),
+/* 13 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("typeorm");
+
+/***/ }),
+/* 14 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.User = void 0;
 const typeorm_1 = __webpack_require__(13);
 let User = class User {
@@ -402,44 +469,6 @@ exports.User = User;
 
 
 /***/ }),
-/* 13 */
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("typeorm");
-
-/***/ }),
-/* 14 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserModule = void 0;
-const common_1 = __webpack_require__(8);
-const typeorm_1 = __webpack_require__(9);
-const user_entity_1 = __webpack_require__(12);
-const user_controller_1 = __webpack_require__(15);
-const user_service_1 = __webpack_require__(16);
-let UserModule = class UserModule {
-};
-UserModule = __decorate([
-    (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User])],
-        controllers: [user_controller_1.UserController],
-        providers: [user_service_1.UserService],
-    })
-], UserModule);
-exports.UserModule = UserModule;
-
-
-/***/ }),
 /* 15 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -452,14 +481,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserController = void 0;
+exports.RegisterService = void 0;
 const common_1 = __webpack_require__(8);
-let UserController = class UserController {
+let RegisterService = class RegisterService {
 };
-UserController = __decorate([
-    (0, common_1.Controller)('user')
-], UserController);
-exports.UserController = UserController;
+RegisterService = __decorate([
+    (0, common_1.Injectable)()
+], RegisterService);
+exports.RegisterService = RegisterService;
 
 
 /***/ }),
@@ -474,19 +503,232 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserService = void 0;
-const common_1 = __webpack_require__(8);
-let UserService = class UserService {
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-UserService = __decorate([
-    (0, common_1.Injectable)()
-], UserService);
-exports.UserService = UserService;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterController = void 0;
+const common_1 = __webpack_require__(8);
+let RegisterController = class RegisterController {
+    getRegisterPage() {
+        return { message: 'Im in register page' };
+    }
+};
+__decorate([
+    (0, common_1.Get)('/register'),
+    (0, common_1.Render)('register'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], RegisterController.prototype, "getRegisterPage", null);
+RegisterController = __decorate([
+    (0, common_1.Controller)('register')
+], RegisterController);
+exports.RegisterController = RegisterController;
 
 
 /***/ }),
 /* 17 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterModule = void 0;
+const common_1 = __webpack_require__(8);
+let RegisterModule = class RegisterModule {
+};
+RegisterModule = __decorate([
+    (0, common_1.Module)({})
+], RegisterModule);
+exports.RegisterModule = RegisterModule;
+
+
+/***/ }),
+/* 18 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoginController = void 0;
+const common_1 = __webpack_require__(8);
+let LoginController = class LoginController {
+    getLoginPage() {
+        return { message: 'Im in Login Page' };
+    }
+};
+__decorate([
+    (0, common_1.Get)('/login'),
+    (0, common_1.Render)('login'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], LoginController.prototype, "getLoginPage", null);
+LoginController = __decorate([
+    (0, common_1.Controller)('login')
+], LoginController);
+exports.LoginController = LoginController;
+
+
+/***/ }),
+/* 19 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoginModule = void 0;
+const common_1 = __webpack_require__(8);
+const login_service_1 = __webpack_require__(20);
+let LoginModule = class LoginModule {
+};
+LoginModule = __decorate([
+    (0, common_1.Module)({
+        providers: [login_service_1.LoginService]
+    })
+], LoginModule);
+exports.LoginModule = LoginModule;
+
+
+/***/ }),
+/* 20 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoginService = void 0;
+const common_1 = __webpack_require__(8);
+let LoginService = class LoginService {
+};
+LoginService = __decorate([
+    (0, common_1.Injectable)()
+], LoginService);
+exports.LoginService = LoginService;
+
+
+/***/ }),
+/* 21 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HomeController = void 0;
+const common_1 = __webpack_require__(8);
+let HomeController = class HomeController {
+    getHomePage() {
+        return { message: 'Im in home page' };
+    }
+};
+__decorate([
+    (0, common_1.Get)('/home'),
+    (0, common_1.Render)('home'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], HomeController.prototype, "getHomePage", null);
+HomeController = __decorate([
+    (0, common_1.Controller)('home')
+], HomeController);
+exports.HomeController = HomeController;
+
+
+/***/ }),
+/* 22 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HomeModule = void 0;
+const common_1 = __webpack_require__(8);
+const home_service_1 = __webpack_require__(23);
+let HomeModule = class HomeModule {
+};
+HomeModule = __decorate([
+    (0, common_1.Module)({
+        providers: [home_service_1.HomeService]
+    })
+], HomeModule);
+exports.HomeModule = HomeModule;
+
+
+/***/ }),
+/* 23 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HomeService = void 0;
+const common_1 = __webpack_require__(8);
+let HomeService = class HomeService {
+};
+HomeService = __decorate([
+    (0, common_1.Injectable)()
+], HomeService);
+exports.HomeService = HomeService;
+
+
+/***/ }),
+/* 24 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("nest-router");
+
+/***/ }),
+/* 25 */
 /***/ ((module) => {
 
 "use strict";
@@ -554,7 +796,7 @@ module.exports = require("handlebars");
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("f55d8649f93bdd964bff")
+/******/ 		__webpack_require__.h = () => ("813a87e8284ed3274ba4")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
