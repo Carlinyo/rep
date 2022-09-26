@@ -1,22 +1,21 @@
-import { Controller, Get, Render } from '@nestjs/common';
+import { Body, Controller, Param, Post, RawBodyRequest } from '@nestjs/common';
 import { AppService } from './app.service';
+import { MessageDto } from './dto/message.dto';
+import { User } from './model/user.entity';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
-  @Get()
-  @Render('login')
-  getLoginPage(){
-    return  { message:'Im in Login Page' }
+  @Post('/joinGroup')
+  joinToGroup(@Body() body:RawBodyRequest<User>){
+    
   }
-  @Get('/home')
-  @Render('home')
-  getHomePage(){
-    return { message:'Im in home page' }
+  @Post('/sendMessage')
+  sendMessage(@Body() body:RawBodyRequest<MessageDto>){
+    this.appService.sendMessage(body)
   }
-  @Get('/register')
-  @Render('register')
-  getRegisterPage(){
-    return { message:'Im in register page' }
+  @Post('/getMessages')
+  getMessages(@Param() id : MessageDto){
+    this.appService.getUserMessages(id)
   }
 }

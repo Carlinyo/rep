@@ -1,3 +1,4 @@
-export class AppDto{
-    
+export class UserDto {
+  username: string;
+  groupId: number;
 }
