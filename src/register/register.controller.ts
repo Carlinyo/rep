@@ -16,6 +16,5 @@ export class RegisterController {
     @Get('/getGroups')
     async getGroups() {
        await this.regService.getGroups()
-    }
-    
+    }  
 }

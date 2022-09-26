@@ -278,7 +278,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppController = void 0;
 const common_1 = __webpack_require__(6);
 const app_service_1 = __webpack_require__(9);
-const message_dto_1 = __webpack_require__(13);
 let AppController = class AppController {
     constructor(appService) {
         this.appService = appService;
@@ -289,12 +288,14 @@ let AppController = class AppController {
     getMessages(id) {
         this.appService.getUserMessages(id);
     }
+    getGroupMessages(groupId) {
+        this.appService.getGroupMessages(groupId);
+    }
     sendGroupMessage(body) {
         this.appService.sendGroupMessage(body);
     }
 };
 __decorate([
-    (0, common_1.Post)('/joinGroup'),
     (0, common_1.Post)('/sendMessage'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -303,11 +304,18 @@ __decorate([
 ], AppController.prototype, "sendMessage", null);
 __decorate([
     (0, common_1.Post)('/getMessages'),
-    __param(0, (0, common_1.Param)()),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof message_dto_1.MessageDto !== "undefined" && message_dto_1.MessageDto) === "function" ? _c : Object]),
+    __metadata("design:paramtypes", [typeof (_c = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _c : Object]),
     __metadata("design:returntype", void 0)
 ], AppController.prototype, "getMessages", null);
+__decorate([
+    (0, common_1.Get)('/getGroupMessages'),
+    __param(0, (0, common_1.Param)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "getGroupMessages", null);
 __decorate([
     (0, common_1.Post)('/sendMessageToGroup'),
     __param(0, (0, common_1.Body)()),
@@ -358,6 +366,9 @@ let AppService = class AppService {
     }
     getUserMessages(id) {
         this.messages.findBy(id);
+    }
+    async getGroupMessages(groupId) {
+        return await this.gMessages.findBy({ groupId });
     }
     sendGroupMessage(message) {
         this.gMessages.save(message);
@@ -464,19 +475,7 @@ exports.Messages = Messages;
 
 
 /***/ }),
-/* 13 */
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MessageDto = void 0;
-class MessageDto {
-}
-exports.MessageDto = MessageDto;
-
-
-/***/ }),
+/* 13 */,
 /* 14 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -693,6 +692,7 @@ let RegisterService = class RegisterService {
         });
         if (group.length < 5 && contains === 0) {
             this.users.save(user);
+            return group;
         }
         else {
             return "Group is Full";
@@ -861,7 +861,7 @@ exports.HomeService = HomeService;
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("9a39a757648a35f86775")
+/******/ 		__webpack_require__.h = () => ("bc0c97397314052a7362")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */

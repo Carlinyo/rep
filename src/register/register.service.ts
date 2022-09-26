@@ -27,6 +27,7 @@ export class RegisterService {
     });
     if (group.length < 5 && contains === 0) {
       this.users.save(user);
+      return group
     } else {
       return "Group is Full";
     }
