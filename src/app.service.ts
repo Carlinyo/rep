@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GroupMessagesI } from './dto/groupmessage.dto';
 import { MessageDto } from './dto/message.dto';
+import { UserDto } from './dto/user.dto';
 import { GroupsMessages } from './model/groupmessages.entity';
 import { Messages } from './model/messages.entity';
 

@@ -9,6 +9,10 @@ export class RegisterController {
     joinToGroup(@Body() body : RawBodyRequest<UserDto>){
         this.regService.JoinToGroup(body)
     }
+    @Post('/leaveGroup')
+    leaveGroup(@Body() id:RawBodyRequest<UserDto>){
+        this.regService.leaveGroup(id)
+    }
     @Get('/getGroups')
     async getGroups() {
        await this.regService.getGroups()

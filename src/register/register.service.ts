@@ -18,10 +18,10 @@ export class RegisterService {
   ) {}
   async JoinToGroup(user: RawBodyRequest<UserDto>) {
     let group = await this.users.findBy({ groupId: user.groupId });
-    let contains:number = 0
+    let contains: number = 0;
     group.forEach((el) => {
       if (el.username === user.username) {
-        contains = 1
+        contains = 1;
         return user.username + "_" + Math.round(Math.random() * 100);
       }
     });
@@ -33,5 +33,9 @@ export class RegisterService {
   }
   async getGroups() {
     return await this.Groups.find();
+  }
+  async leaveGroup(id: UserDto) {
+    let user: any = await this.users.findOneBy(id);
+    await this.users.delete(user);
   }
 }

@@ -4,9 +4,6 @@ import { User } from "./user.entity";
 export class groups {
   @PrimaryGeneratedColumn()
   id: number;
-  @ManyToMany(() => User, { cascade: true })
-  @JoinTable()
-  users:User[]
   @Column()
   name: string;
 }

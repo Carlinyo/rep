@@ -538,18 +538,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.groups = void 0;
 const typeorm_1 = __webpack_require__(10);
-const user_entity_1 = __webpack_require__(14);
 let groups = class groups {
 };
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)
 ], groups.prototype, "id", void 0);
-__decorate([
-    (0, typeorm_1.ManyToMany)(() => user_entity_1.User, { cascade: true }),
-    (0, typeorm_1.JoinTable)(),
-    __metadata("design:type", Array)
-], groups.prototype, "users", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
@@ -611,7 +605,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RegisterController = void 0;
 const common_1 = __webpack_require__(6);
@@ -622,6 +616,9 @@ let RegisterController = class RegisterController {
     }
     joinToGroup(body) {
         this.regService.JoinToGroup(body);
+    }
+    leaveGroup(id) {
+        this.regService.leaveGroup(id);
     }
     async getGroups() {
         await this.regService.getGroups();
@@ -634,6 +631,13 @@ __decorate([
     __metadata("design:paramtypes", [typeof (_b = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _b : Object]),
     __metadata("design:returntype", void 0)
 ], RegisterController.prototype, "joinToGroup", null);
+__decorate([
+    (0, common_1.Post)('/leaveGroup'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _c : Object]),
+    __metadata("design:returntype", void 0)
+], RegisterController.prototype, "leaveGroup", null);
 __decorate([
     (0, common_1.Get)('/getGroups'),
     __metadata("design:type", Function),
@@ -696,6 +700,10 @@ let RegisterService = class RegisterService {
     }
     async getGroups() {
         return await this.Groups.find();
+    }
+    async leaveGroup(id) {
+        let user = await this.users.findOneBy(id);
+        await this.users.delete(user);
     }
 };
 RegisterService = __decorate([
@@ -853,7 +861,7 @@ exports.HomeService = HomeService;
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("f04c40c1d4803ca18143")
+/******/ 		__webpack_require__.h = () => ("9a39a757648a35f86775")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
