@@ -9,6 +9,8 @@ import { HomeController } from "./home/home.controller";
 import { HomeModule } from "./home/home.module";
 import { groups } from "./model/groups.entity";
 import { GroupsMessages } from "./model/groupmessages.entity";
+import { ChatService } from "./chat/chat.service";
+import { ChatModule } from "./chat/chat.module";
 
 @Module({
   imports: [
@@ -19,19 +21,17 @@ import { GroupsMessages } from "./model/groupmessages.entity";
       username: "root",
       password: "asdasd123",
       database: "chat_db",
-      entities: [User, Messages,groups,GroupsMessages],
+      entities: [User, Messages, groups, GroupsMessages],
       synchronize: true,
-      autoLoadEntities : true
+      autoLoadEntities: true,
     }),
     RegisterModule,
     HomeModule,
-    TypeOrmModule.forFeature([Messages,GroupsMessages])
+    TypeOrmModule.forFeature([Messages, GroupsMessages]),
+    ChatModule,
   ],
-  controllers: [
-    AppController,
-    HomeController,
-  ],
-  providers: [AppService],
-  exports:[TypeOrmModule]
+  controllers: [AppController, HomeController],
+  providers: [AppService, ChatService],
+  exports: [TypeOrmModule],
 })
 export class AppModule {}
