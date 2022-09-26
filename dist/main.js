@@ -158,7 +158,7 @@ module.exports = function (updatedModules, renewedModules) {
 
 /***/ }),
 /* 3 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ ((module, exports, __webpack_require__) => {
 
 "use strict";
 
@@ -166,7 +166,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __webpack_require__(4);
 const app_module_1 = __webpack_require__(5);
 async function bootstrap() {
-    const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    const app = await core_1.NestFactory.create(app_module_1.AppModule, {
+        rawBody: true
+    });
+    if (true) {
+        module.hot.accept();
+        module.hot.dispose(() => app.close());
+    }
     await app.listen(3000);
 }
 bootstrap();
@@ -194,15 +200,41 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppModule = void 0;
 const common_1 = __webpack_require__(6);
+const typeorm_1 = __webpack_require__(7);
 const app_controller_1 = __webpack_require__(8);
 const app_service_1 = __webpack_require__(9);
+const messages_entity_1 = __webpack_require__(11);
+const user_entity_1 = __webpack_require__(13);
+const register_module_1 = __webpack_require__(15);
+const home_controller_1 = __webpack_require__(18);
+const home_module_1 = __webpack_require__(19);
+const groups_entity_1 = __webpack_require__(14);
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [],
-        controllers: [app_controller_1.AppController],
+        imports: [
+            typeorm_1.TypeOrmModule.forRoot({
+                type: "mysql",
+                host: "localhost",
+                port: 3306,
+                username: "root",
+                password: "asdasd123",
+                database: "chat_db",
+                entities: [user_entity_1.User, messages_entity_1.Messages, groups_entity_1.groups],
+                synchronize: true,
+                autoLoadEntities: true
+            }),
+            register_module_1.RegisterModule,
+            home_module_1.HomeModule,
+            typeorm_1.TypeOrmModule.forFeature([messages_entity_1.Messages])
+        ],
+        controllers: [
+            app_controller_1.AppController,
+            home_controller_1.HomeController,
+        ],
         providers: [app_service_1.AppService],
+        exports: [typeorm_1.TypeOrmModule]
     })
 ], AppModule);
 exports.AppModule = AppModule;
@@ -216,7 +248,13 @@ exports.AppModule = AppModule;
 module.exports = require("@nestjs/common");
 
 /***/ }),
-/* 7 */,
+/* 7 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("@nestjs/typeorm");
+
+/***/ }),
 /* 8 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -231,16 +269,41 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppController = void 0;
 const common_1 = __webpack_require__(6);
 const app_service_1 = __webpack_require__(9);
+const message_dto_1 = __webpack_require__(12);
 let AppController = class AppController {
     constructor(appService) {
         this.appService = appService;
     }
+    sendMessage(body) {
+        this.appService.sendMessage(body);
+    }
+    getMessages(id) {
+        this.appService.getUserMessages(id);
+    }
 };
+__decorate([
+    (0, common_1.Post)('/joinGroup'),
+    (0, common_1.Post)('/sendMessage'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "sendMessage", null);
+__decorate([
+    (0, common_1.Post)('/getMessages'),
+    __param(0, (0, common_1.Param)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof message_dto_1.MessageDto !== "undefined" && message_dto_1.MessageDto) === "function" ? _c : Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "getMessages", null);
 AppController = __decorate([
     (0, common_1.Controller)(),
     __metadata("design:paramtypes", [typeof (_a = typeof app_service_1.AppService !== "undefined" && app_service_1.AppService) === "function" ? _a : Object])
@@ -260,15 +323,415 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppService = void 0;
 const common_1 = __webpack_require__(6);
+const typeorm_1 = __webpack_require__(7);
+const typeorm_2 = __webpack_require__(10);
+const messages_entity_1 = __webpack_require__(11);
 let AppService = class AppService {
+    constructor(messages) {
+        this.messages = messages;
+    }
+    sendMessage(message) {
+        this.messages.save(message);
+    }
+    getUserMessages(id) {
+        this.messages.findBy(id);
+    }
+    joinGroup(body) {
+    }
 };
 AppService = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(messages_entity_1.Messages)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object])
 ], AppService);
 exports.AppService = AppService;
+
+
+/***/ }),
+/* 10 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("typeorm");
+
+/***/ }),
+/* 11 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Messages = void 0;
+const typeorm_1 = __webpack_require__(10);
+let Messages = class Messages {
+};
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
+], Messages.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Messages.prototype, "fromId", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Messages.prototype, "toId", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Messages.prototype, "message", void 0);
+Messages = __decorate([
+    (0, typeorm_1.Entity)()
+], Messages);
+exports.Messages = Messages;
+
+
+/***/ }),
+/* 12 */
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MessageDto = void 0;
+class MessageDto {
+}
+exports.MessageDto = MessageDto;
+
+
+/***/ }),
+/* 13 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.User = void 0;
+const typeorm_1 = __webpack_require__(10);
+const groups_entity_1 = __webpack_require__(14);
+let User = class User {
+};
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
+], User.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], User.prototype, "username", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], User.prototype, "groupId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToMany)(() => groups_entity_1.groups),
+    (0, typeorm_1.JoinTable)(),
+    __metadata("design:type", Array)
+], User.prototype, "groups", void 0);
+User = __decorate([
+    (0, typeorm_1.Entity)()
+], User);
+exports.User = User;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.groups = void 0;
+const typeorm_1 = __webpack_require__(10);
+const user_entity_1 = __webpack_require__(13);
+let groups = class groups {
+};
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
+], groups.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.ManyToMany)(() => user_entity_1.User, { cascade: true }),
+    (0, typeorm_1.JoinTable)(),
+    __metadata("design:type", Array)
+], groups.prototype, "users", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], groups.prototype, "name", void 0);
+groups = __decorate([
+    (0, typeorm_1.Entity)()
+], groups);
+exports.groups = groups;
+
+
+/***/ }),
+/* 15 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterModule = void 0;
+const common_1 = __webpack_require__(6);
+const user_entity_1 = __webpack_require__(13);
+const register_controller_1 = __webpack_require__(16);
+const register_service_1 = __webpack_require__(17);
+const typeorm_1 = __webpack_require__(7);
+const groups_entity_1 = __webpack_require__(14);
+let RegisterModule = class RegisterModule {
+};
+RegisterModule = __decorate([
+    (0, common_1.Module)({
+        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, groups_entity_1.groups])],
+        providers: [register_service_1.RegisterService],
+        controllers: [register_controller_1.RegisterController],
+        exports: [typeorm_1.TypeOrmModule]
+    })
+], RegisterModule);
+exports.RegisterModule = RegisterModule;
+
+
+/***/ }),
+/* 16 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterController = void 0;
+const common_1 = __webpack_require__(6);
+const register_service_1 = __webpack_require__(17);
+let RegisterController = class RegisterController {
+    constructor(regService) {
+        this.regService = regService;
+    }
+    joinToGroup(body) {
+        this.regService.JoinToGroup(body);
+    }
+    async getGroups() {
+        await this.regService.getGroups();
+    }
+};
+__decorate([
+    (0, common_1.Post)('/joinToGroup'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], RegisterController.prototype, "joinToGroup", null);
+__decorate([
+    (0, common_1.Get)('/getGroups'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], RegisterController.prototype, "getGroups", null);
+RegisterController = __decorate([
+    (0, common_1.Controller)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof register_service_1.RegisterService !== "undefined" && register_service_1.RegisterService) === "function" ? _a : Object])
+], RegisterController);
+exports.RegisterController = RegisterController;
+
+
+/***/ }),
+/* 17 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterService = void 0;
+const common_1 = __webpack_require__(6);
+const typeorm_1 = __webpack_require__(7);
+const groups_entity_1 = __webpack_require__(14);
+const user_entity_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(10);
+let RegisterService = class RegisterService {
+    constructor(users, Groups) {
+        this.users = users;
+        this.Groups = Groups;
+    }
+    async JoinToGroup(user) {
+        let group = await this.users.findBy({ groupId: user.groupId });
+        let contains = 0;
+        group.forEach((el) => {
+            if (el.username === user.username) {
+                contains = 1;
+                return user.username + "_" + Math.round(Math.random() * 100);
+            }
+        });
+        if (group.length < 5 && contains === 0) {
+            this.users.save(user);
+        }
+        else {
+            return "Group is Full";
+        }
+    }
+    async getGroups() {
+        return await this.Groups.find();
+    }
+};
+RegisterService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(1, (0, typeorm_1.InjectRepository)(groups_entity_1.groups)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, Object])
+], RegisterService);
+exports.RegisterService = RegisterService;
+
+
+/***/ }),
+/* 18 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HomeController = void 0;
+const common_1 = __webpack_require__(6);
+let HomeController = class HomeController {
+    getHomePage() {
+        return 'Im in home page';
+    }
+};
+__decorate([
+    (0, common_1.Get)('/home'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], HomeController.prototype, "getHomePage", null);
+HomeController = __decorate([
+    (0, common_1.Controller)('home')
+], HomeController);
+exports.HomeController = HomeController;
+
+
+/***/ }),
+/* 19 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HomeModule = void 0;
+const common_1 = __webpack_require__(6);
+const home_service_1 = __webpack_require__(20);
+let HomeModule = class HomeModule {
+};
+HomeModule = __decorate([
+    (0, common_1.Module)({
+        providers: [home_service_1.HomeService]
+    })
+], HomeModule);
+exports.HomeModule = HomeModule;
+
+
+/***/ }),
+/* 20 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HomeService = void 0;
+const common_1 = __webpack_require__(6);
+let HomeService = class HomeService {
+};
+HomeService = __decorate([
+    (0, common_1.Injectable)()
+], HomeService);
+exports.HomeService = HomeService;
 
 
 /***/ })
@@ -333,7 +796,7 @@ exports.AppService = AppService;
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("95cc75fb0210579c37fa")
+/******/ 		__webpack_require__.h = () => ("3490213387a29912bdf3")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
