@@ -11,7 +11,7 @@ export class RegisterService {
     @InjectRepository(User) private users: Repository<RawBodyRequest<UserDto>>,
     @InjectRepository(groups) private groups: Repository<GroupDto>
   ) {}
-  async registerUser(user: RawBodyRequest<UserDto>) {
+  async JoinToGroup(user: RawBodyRequest<UserDto>) {
    this.users.save(user);
   }
   async getGroups() {

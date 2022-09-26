@@ -7,13 +7,5 @@ export class User {
   @Column()
   username: string;
   @Column()
-  firstName: string;
-  @Column()
-  lastName: string;
-  @Column()
-  email: string;
-  @Column()
-  active: number;
-  @Column()
   groupId: number;
 }

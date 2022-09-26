@@ -13,4 +13,7 @@ export class AppService {
   getUserMessages(id:MessageDto){
     this.messages.findBy(id)
   }
+  joinGroup(){
+    
+  }
 }

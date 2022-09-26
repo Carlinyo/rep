@@ -11,7 +11,7 @@ export class RegisterController {
     }
     @Post('/addUser')
     addUser(@Body() body:RawBodyRequest<UserDto>) {
-        this.regService.registerUser(body)
+        this.regService.JoinToGroup(body)
     }
     @Get('/getGroups')
     async getGroups() {

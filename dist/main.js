@@ -271,7 +271,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppController = void 0;
 const common_1 = __webpack_require__(6);
@@ -281,6 +281,8 @@ let AppController = class AppController {
     constructor(appService) {
         this.appService = appService;
     }
+    joinToGroup(body) {
+    }
     sendMessage(body) {
         this.appService.sendMessage(body);
     }
@@ -289,17 +291,24 @@ let AppController = class AppController {
     }
 };
 __decorate([
-    (0, common_1.Post)('/sendMessage'),
+    (0, common_1.Post)('/joinGroup'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [typeof (_b = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], AppController.prototype, "joinToGroup", null);
+__decorate([
+    (0, common_1.Post)('/sendMessage'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _c : Object]),
     __metadata("design:returntype", void 0)
 ], AppController.prototype, "sendMessage", null);
 __decorate([
     (0, common_1.Post)('/getMessages'),
     __param(0, (0, common_1.Param)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof message_dto_1.MessageDto !== "undefined" && message_dto_1.MessageDto) === "function" ? _c : Object]),
+    __metadata("design:paramtypes", [typeof (_d = typeof message_dto_1.MessageDto !== "undefined" && message_dto_1.MessageDto) === "function" ? _d : Object]),
     __metadata("design:returntype", void 0)
 ], AppController.prototype, "getMessages", null);
 AppController = __decorate([
@@ -343,6 +352,8 @@ let AppService = class AppService {
     }
     getUserMessages(id) {
         this.messages.findBy(id);
+    }
+    joinGroup() {
     }
 };
 AppService = __decorate([
@@ -445,22 +456,6 @@ __decorate([
 ], User.prototype, "username", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], User.prototype, "firstName", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], User.prototype, "lastName", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], User.prototype, "email", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", Number)
-], User.prototype, "active", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
 ], User.prototype, "groupId", void 0);
 User = __decorate([
@@ -533,7 +528,7 @@ let RegisterController = class RegisterController {
         return "Im in Register Page";
     }
     addUser(body) {
-        this.regService.registerUser(body);
+        this.regService.JoinToGroup(body);
     }
     async getGroups() {
         await this.regService.getGroups();
@@ -596,7 +591,7 @@ let RegisterService = class RegisterService {
         this.users = users;
         this.groups = groups;
     }
-    async registerUser(user) {
+    async JoinToGroup(user) {
         this.users.save(user);
     }
     async getGroups() {
@@ -792,7 +787,7 @@ exports.HomeService = HomeService;
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("682e60a1655afeb063aa")
+/******/ 		__webpack_require__.h = () => ("bf2c03920d3954d5bdb8")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
