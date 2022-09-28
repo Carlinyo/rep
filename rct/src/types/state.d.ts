@@ -1,6 +1,7 @@
 declare global {
     interface State{
-        groups:Groups[]
+        groups:Groups[],
+        users:User[]
     }
 }
 export {}

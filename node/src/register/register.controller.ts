@@ -13,8 +13,12 @@ export class RegisterController {
     leaveGroup(@Body() id:RawBodyRequest<UserDto>){
         this.regService.leaveGroup(id)
     }
+    @Get('/getUsers')
+    async getUsers(){
+        return await this.regService.getUsers()
+    }
     @Get('/getGroups')
     async getGroups() {
-       await this.regService.getGroups()
+       return await this.regService.getGroups()
     }  
 }

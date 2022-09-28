@@ -9,8 +9,11 @@ const ChatReducer = createSlice({
     getGroups(state, action) {
       state.groups = action.payload;
     },
+    getUsers(state, action) {
+      state.users = action.payload;
+    },
   },
 });
 
-export const { getGroups } = ChatReducer.actions;
+export const { getGroups, getUsers } = ChatReducer.actions;
 export default ChatReducer.reducer;

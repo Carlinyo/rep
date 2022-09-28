@@ -1,25 +1,22 @@
 import { useEffect } from "react";
-import { GetGroupsA } from "../actions/chatActions";
+import { GetGroupsA, GetUsersA } from "../actions/chatActions";
 import { useAppDispatch, useAppSelector } from "../utils/helpers";
 
 const JoinComponent = () => {
-  const { groups } = useAppSelector((state) => state.ChatR);
+  const { groups, users } = useAppSelector((state) => state.ChatR);
   const dispatch = useAppDispatch();
   useEffect(() => {
+    dispatch(GetUsersA());
     dispatch(GetGroupsA());
   }, []);
-  console.log(groups);
+  console.log(groups, users);
   return (
     <div>
       <form action="">
         <select name="groups">
-          {
-            groups?.map((group,index)=>{
-              return (
-                <option key={index}>{group.name}</option>
-              )
-            })
-          }
+          {groups?.map((group, index) => {
+            return <option key={index}>{group.name}</option>;
+          })}
         </select>
         <div>
           <label>Username</label>

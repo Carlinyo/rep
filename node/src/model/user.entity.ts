@@ -1,4 +1,10 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import { groups } from "./groups.entity";
 
 @Entity()
@@ -7,9 +13,7 @@ export class User {
   id: number;
   @Column()
   username: string;
-  @Column()
-  groupId: number;
-  @ManyToMany(()=> groups)
-  @JoinTable()
-  groups:groups[]
+  @ManyToOne(() => groups, (group: groups) => group)
+  @JoinColumn()
+  group: groups;
 }
