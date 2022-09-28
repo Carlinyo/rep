@@ -166,7 +166,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __webpack_require__(4);
 const app_module_1 = __webpack_require__(5);
 async function bootstrap() {
-    const cors = __webpack_require__(25);
+    const cors = __webpack_require__(27);
     const app = await core_1.NestFactory.create(app_module_1.AppModule, {
         rawBody: true,
         cors: true
@@ -205,16 +205,16 @@ exports.AppModule = void 0;
 const common_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(7);
 const app_controller_1 = __webpack_require__(8);
-const app_service_1 = __webpack_require__(13);
-const messages_entity_1 = __webpack_require__(12);
-const user_entity_1 = __webpack_require__(14);
+const app_service_1 = __webpack_require__(15);
+const messages_entity_1 = __webpack_require__(14);
+const user_entity_1 = __webpack_require__(13);
 const register_module_1 = __webpack_require__(16);
-const home_controller_1 = __webpack_require__(19);
-const home_module_1 = __webpack_require__(20);
-const groups_entity_1 = __webpack_require__(15);
+const home_controller_1 = __webpack_require__(20);
+const home_module_1 = __webpack_require__(21);
+const groups_entity_1 = __webpack_require__(12);
 const groupmessages_entity_1 = __webpack_require__(10);
 const chat_service_1 = __webpack_require__(9);
-const chat_module_1 = __webpack_require__(22);
+const chat_module_1 = __webpack_require__(23);
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -357,7 +357,7 @@ exports.ChatService = void 0;
 const common_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(7);
 const groupmessages_entity_1 = __webpack_require__(10);
-const messages_entity_1 = __webpack_require__(12);
+const messages_entity_1 = __webpack_require__(14);
 const typeorm_2 = __webpack_require__(11);
 let ChatService = class ChatService {
     constructor(messages, gMessages) {
@@ -451,6 +451,84 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.groups = void 0;
+const typeorm_1 = __webpack_require__(11);
+let groups = class groups {
+};
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
+], groups.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], groups.prototype, "name", void 0);
+groups = __decorate([
+    (0, typeorm_1.Entity)()
+], groups);
+exports.groups = groups;
+
+
+/***/ }),
+/* 13 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.User = void 0;
+const typeorm_1 = __webpack_require__(11);
+const groups_entity_1 = __webpack_require__(12);
+let User = class User {
+};
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
+], User.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], User.prototype, "username", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], User.prototype, "groupId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToMany)(() => groups_entity_1.groups),
+    (0, typeorm_1.JoinTable)(),
+    __metadata("design:type", Array)
+], User.prototype, "groups", void 0);
+User = __decorate([
+    (0, typeorm_1.Entity)()
+], User);
+exports.User = User;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Messages = void 0;
 const typeorm_1 = __webpack_require__(11);
 let Messages = class Messages {
@@ -478,7 +556,7 @@ exports.Messages = Messages;
 
 
 /***/ }),
-/* 13 */
+/* 15 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -501,84 +579,6 @@ exports.AppService = AppService;
 
 
 /***/ }),
-/* 14 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.User = void 0;
-const typeorm_1 = __webpack_require__(11);
-const groups_entity_1 = __webpack_require__(15);
-let User = class User {
-};
-__decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)(),
-    __metadata("design:type", Number)
-], User.prototype, "id", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], User.prototype, "username", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", Number)
-], User.prototype, "groupId", void 0);
-__decorate([
-    (0, typeorm_1.ManyToMany)(() => groups_entity_1.groups),
-    (0, typeorm_1.JoinTable)(),
-    __metadata("design:type", Array)
-], User.prototype, "groups", void 0);
-User = __decorate([
-    (0, typeorm_1.Entity)()
-], User);
-exports.User = User;
-
-
-/***/ }),
-/* 15 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.groups = void 0;
-const typeorm_1 = __webpack_require__(11);
-let groups = class groups {
-};
-__decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)(),
-    __metadata("design:type", Number)
-], groups.prototype, "id", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], groups.prototype, "name", void 0);
-groups = __decorate([
-    (0, typeorm_1.Entity)()
-], groups);
-exports.groups = groups;
-
-
-/***/ }),
 /* 16 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -593,11 +593,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RegisterModule = void 0;
 const common_1 = __webpack_require__(6);
-const user_entity_1 = __webpack_require__(14);
+const user_entity_1 = __webpack_require__(13);
 const register_controller_1 = __webpack_require__(17);
 const register_service_1 = __webpack_require__(18);
 const typeorm_1 = __webpack_require__(7);
-const groups_entity_1 = __webpack_require__(15);
+const groups_entity_1 = __webpack_require__(12);
 let RegisterModule = class RegisterModule {
 };
 RegisterModule = __decorate([
@@ -698,8 +698,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RegisterService = void 0;
 const common_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(7);
-const groups_entity_1 = __webpack_require__(15);
-const user_entity_1 = __webpack_require__(14);
+const groups_entity_1 = __webpack_require__(12);
+const user_entity_1 = __webpack_require__(13);
 const typeorm_2 = __webpack_require__(11);
 let RegisterService = class RegisterService {
     constructor(users, Groups) {
@@ -741,7 +741,8 @@ exports.RegisterService = RegisterService;
 
 
 /***/ }),
-/* 19 */
+/* 19 */,
+/* 20 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -776,7 +777,7 @@ exports.HomeController = HomeController;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -790,7 +791,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HomeModule = void 0;
 const common_1 = __webpack_require__(6);
-const home_service_1 = __webpack_require__(21);
+const home_service_1 = __webpack_require__(22);
 let HomeModule = class HomeModule {
 };
 HomeModule = __decorate([
@@ -802,7 +803,7 @@ exports.HomeModule = HomeModule;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -825,7 +826,7 @@ exports.HomeService = HomeService;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -841,8 +842,8 @@ exports.ChatModule = void 0;
 const common_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(7);
 const groupmessages_entity_1 = __webpack_require__(10);
-const messages_entity_1 = __webpack_require__(12);
-const chat_gateway_1 = __webpack_require__(23);
+const messages_entity_1 = __webpack_require__(14);
+const chat_gateway_1 = __webpack_require__(24);
 const chat_service_1 = __webpack_require__(9);
 let ChatModule = class ChatModule {
 };
@@ -856,7 +857,7 @@ exports.ChatModule = ChatModule;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -874,8 +875,8 @@ var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatGateway = void 0;
 const common_1 = __webpack_require__(6);
-const websockets_1 = __webpack_require__(24);
-const messages_entity_1 = __webpack_require__(12);
+const websockets_1 = __webpack_require__(25);
+const messages_entity_1 = __webpack_require__(14);
 const chat_service_1 = __webpack_require__(9);
 let ChatGateway = class ChatGateway {
     constructor(chatService) {
@@ -915,14 +916,15 @@ exports.ChatGateway = ChatGateway;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
-/* 25 */
+/* 26 */,
+/* 27 */
 /***/ ((module) => {
 
 "use strict";
@@ -990,7 +992,7 @@ module.exports = require("cors");
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("ddb9707821155053a77a")
+/******/ 		__webpack_require__.h = () => ("2c18533639e4660eb71b")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
