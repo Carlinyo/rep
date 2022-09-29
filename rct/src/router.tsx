@@ -9,8 +9,8 @@ const Router = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/group:id" element={<GroupChat />} />
-          <Route path="/private:id" element={<Chat />} />
+          <Route path="/group/:id" element={<GroupChat />} />
+          <Route path="/private/:id" element={<Chat />} />
         </Routes>
       </BrowserRouter>
     </>

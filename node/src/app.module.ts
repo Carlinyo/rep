@@ -11,6 +11,7 @@ import { groups } from "./model/groups.entity";
 import { GroupsMessages } from "./model/groupmessages.entity";
 import { ChatService } from "./chat/chat.service";
 import { ChatModule } from "./chat/chat.module";
+import { Group_User } from "./model/group_user.entity";
 
 
 @Module({
@@ -22,10 +23,9 @@ import { ChatModule } from "./chat/chat.module";
       username: "root",
       password: "asdasd123",
       database: "chat_db",
-      entities: [User, Messages, groups, GroupsMessages],
+      entities: [User, Messages, groups, GroupsMessages, Group_User],
       synchronize: true,
       autoLoadEntities: true,
-     
     }),
     RegisterModule,
     HomeModule,

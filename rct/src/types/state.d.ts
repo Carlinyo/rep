@@ -1,6 +1,9 @@
 declare global {
     interface State{
-        groups:Groups[]
+        groups:Groups[];
+        users:User[];
+        joinReqData:string;
+        groupData:Groups[]
     }
 }
 export {}

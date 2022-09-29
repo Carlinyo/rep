@@ -6,7 +6,7 @@ import {
   WebSocketGateway,
 } from "@nestjs/websockets";
 import { NestGateway } from "@nestjs/websockets/interfaces/nest-gateway.interface";
-import { Messages } from "src/model/messages.entity";
+import { MessageDto } from "src/dto/message.dto";
 import { ChatService } from "./chat.service";
 @WebSocketGateway()
 export class ChatGateway implements NestGateway {
@@ -15,7 +15,6 @@ export class ChatGateway implements NestGateway {
     console.log("Init", server);
   }
   handleConnection(socket: any) {
-    console.log(socket);
     process.nextTick(() => {
       socket.emit("messages");
     });
@@ -25,8 +24,7 @@ export class ChatGateway implements NestGateway {
   }
   @Bind(MessageBody(), ConnectedSocket())
   @SubscribeMessage("chat")
-  handleNewMessage(chat: Messages, socket: any) {
-    console.log("New Chat", chat);
+  handleNewMessage(chat: MessageDto, socket: any) {
     this.chatService.sendMessage(chat)
     socket.emit("newChat", chat);
     socket.broadcast.emit("newChat", chat);

@@ -1,13 +1,24 @@
-import { Column, PrimaryGeneratedColumn,Entity } from "typeorm";
+import {
+  Column,
+  PrimaryGeneratedColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+} from "typeorm";
+import { User } from "./user.entity";
 
 @Entity()
-export class Messages{
-    @PrimaryGeneratedColumn()
-    id:number
-    @Column()
-    fromId:number
-    @Column()
-    toId:number
-    @Column()
-    message:string
+export class Messages {
+  @PrimaryGeneratedColumn()
+  id: number;
+  @ManyToOne(() => User, (user: User) => user)
+  @JoinColumn()
+  from: User;
+  @ManyToOne(() => User, (user: User) => user)
+  @JoinColumn()
+  to: User;
+  @Column()
+  message: string;
+  @Column()
+  date:string;
 }

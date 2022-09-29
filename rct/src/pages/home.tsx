@@ -1,4 +1,4 @@
-import JoinComponent from "../components/join-component";
+import JoinComponent from "../components/JoinComponent/join-component";
 
 const Home = () => {
   return (

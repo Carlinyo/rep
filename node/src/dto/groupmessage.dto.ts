@@ -3,4 +3,5 @@ export class GroupMessagesI{
     fromId:number;
     groupId:number;
     message:string;
+    date:string;
 }
