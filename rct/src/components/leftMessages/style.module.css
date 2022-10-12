@@ -1,0 +1,30 @@
+.message {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgb(155, 155, 155);
+  border-radius: 15px;
+  min-width: 250px;
+  max-width: 250px;
+  min-height: 30px;
+  color: white;
+  padding-right: 15px;
+  flex-wrap: wrap;
+  word-break: break-all;
+  padding: 30px;
+}
+
+.message > p {
+  margin: 0 !important;
+}
+.message > span {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+}
+.user{
+    position: absolute;
+    left: 7px;
+    top: 5px;
+}

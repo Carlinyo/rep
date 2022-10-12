@@ -1,9 +1,23 @@
 declare global {
+  interface Message{
+    message:string;
+    date:string;
+  }
+  interface From{
+    id:number;
+    username:string;
+  }
   interface GroupMessages {
-    id: number;
-    fromId: number;
-    groupId: number;
-    message: string;
+    from?: From;
+    date: string;
+    message:string
+    group?:Groups
+    user?:string
+  }
+  interface SendGroupData{
+    from:string | null;
+    message:Message;
+    group:string | undefined;
   }
   interface PrivateMessage {
     id: number;

@@ -166,7 +166,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __webpack_require__(4);
 const app_module_1 = __webpack_require__(5);
 async function bootstrap() {
-    const cors = __webpack_require__(27);
+    const cors = __webpack_require__(28);
     const app = await core_1.NestFactory.create(app_module_1.AppModule, {
         rawBody: true,
         cors: true
@@ -205,17 +205,18 @@ exports.AppModule = void 0;
 const common_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(7);
 const app_controller_1 = __webpack_require__(8);
-const app_service_1 = __webpack_require__(15);
+const app_service_1 = __webpack_require__(16);
 const messages_entity_1 = __webpack_require__(14);
 const user_entity_1 = __webpack_require__(13);
-const register_module_1 = __webpack_require__(16);
-const home_controller_1 = __webpack_require__(20);
-const home_module_1 = __webpack_require__(21);
+const register_module_1 = __webpack_require__(17);
+const home_controller_1 = __webpack_require__(21);
+const home_module_1 = __webpack_require__(22);
 const groups_entity_1 = __webpack_require__(12);
 const groupmessages_entity_1 = __webpack_require__(10);
 const chat_service_1 = __webpack_require__(9);
-const chat_module_1 = __webpack_require__(23);
-const group_user_entity_1 = __webpack_require__(19);
+const chat_module_1 = __webpack_require__(24);
+const group_user_entity_1 = __webpack_require__(15);
+const user_user_message_entity_1 = __webpack_require__(20);
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -228,7 +229,14 @@ AppModule = __decorate([
                 username: "root",
                 password: "asdasd123",
                 database: "chat_db",
-                entities: [user_entity_1.User, messages_entity_1.Messages, groups_entity_1.groups, groupmessages_entity_1.GroupsMessages, group_user_entity_1.Group_User],
+                entities: [
+                    user_entity_1.User,
+                    messages_entity_1.Messages,
+                    groups_entity_1.groups,
+                    groupmessages_entity_1.GroupsMessages,
+                    group_user_entity_1.Group_User,
+                    user_user_message_entity_1.UserToUserMessage,
+                ],
                 synchronize: true,
                 autoLoadEntities: true,
             }),
@@ -274,10 +282,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b, _c, _d;
+var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppController = void 0;
 const common_1 = __webpack_require__(6);
@@ -286,47 +291,7 @@ let AppController = class AppController {
     constructor(chatService) {
         this.chatService = chatService;
     }
-    sendMessage(body) {
-        this.chatService.sendMessage(body);
-    }
-    getMessages(id) {
-        this.chatService.getUserMessages(id);
-    }
-    getGroupMessages(groupId) {
-        this.chatService.getGroupMessages(groupId);
-    }
-    sendGroupMessage(body) {
-        this.chatService.sendGroupMessage(body);
-    }
 };
-__decorate([
-    (0, common_1.Post)("/sendMessage"),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _b : Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "sendMessage", null);
-__decorate([
-    (0, common_1.Post)("/getMessages"),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _c : Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "getMessages", null);
-__decorate([
-    (0, common_1.Get)("/getGroupMessages"),
-    __param(0, (0, common_1.Param)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "getGroupMessages", null);
-__decorate([
-    (0, common_1.Post)("/sendMessageToGroup"),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _d : Object]),
-    __metadata("design:returntype", void 0)
-], AppController.prototype, "sendGroupMessage", null);
 AppController = __decorate([
     (0, common_1.Controller)(),
     __metadata("design:paramtypes", [typeof (_a = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _a : Object])
@@ -352,37 +317,86 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatService = void 0;
 const common_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(7);
 const groupmessages_entity_1 = __webpack_require__(10);
+const groups_entity_1 = __webpack_require__(12);
+const group_user_entity_1 = __webpack_require__(15);
 const messages_entity_1 = __webpack_require__(14);
-const typeorm_2 = __webpack_require__(11);
+const user_entity_1 = __webpack_require__(13);
 let ChatService = class ChatService {
-    constructor(messages, gMessages) {
-        this.messages = messages;
+    constructor(users, group_user, Groups, gMessages, messages) {
+        this.users = users;
+        this.group_user = group_user;
+        this.Groups = Groups;
         this.gMessages = gMessages;
+        this.messages = messages;
     }
-    sendMessage(message) {
-        this.messages.save(message);
+    async sendGroupMessage(body) {
+        let Message = await this.messages.save(body.message);
+        await this.gMessages.save({
+            message: Message.id,
+            from: body.from,
+            group: body.group,
+        });
     }
-    getUserMessages(id) {
-        this.messages.findBy(id);
+    async JoinToGroup(user) {
+        let group = await this.users.find({
+            relations: { group: true },
+        });
+        let groupUsers = group.filter((el) => el.group.id === +user.group.group);
+        let contains = 0;
+        for (let i = 0; i < groupUsers.length; i++) {
+            if (groupUsers[i].username === user.group.username) {
+                contains = 1;
+                return {
+                    status: user.group.username + "_" + Math.round(Math.random() * 100),
+                };
+            }
+        }
+        if (groupUsers.length < 5 && contains === 0) {
+            let User = await this.users.save(user.group);
+            await this.group_user.save({
+                group: user.group.group,
+                user: User.id,
+            });
+            return { user: User, status: "Ok" };
+        }
     }
-    async getGroupMessages(groupId) {
-        return await this.gMessages.findBy({ groupId });
+    async getGroups() {
+        return await this.Groups.find();
     }
-    sendGroupMessage(message) {
-        this.gMessages.save(message);
+    async leaveGroup(id) {
+        let user = await this.users.findOneBy(id);
+        await this.users.delete(user);
+    }
+    async getUsers() {
+        return await this.group_user.find({
+            relations: ["user", "group"],
+        });
+    }
+    async GetGroupData(id) {
+        let groupMessages = await this.gMessages.find({
+            relations: { group: true, from: true, message: true },
+        });
+        let groupUsers = groupMessages
+            .filter((el) => el.group.id === +id)
+            .sort((a, b) => b.id > a.id);
+        let users = await this.users.find({ relations: ["group"] }), Users = users.filter((el) => el.group.id === +id);
+        return { messages: groupUsers, users: Users };
     }
 };
 ChatService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(messages_entity_1.Messages)),
-    __param(1, (0, typeorm_1.InjectRepository)(groupmessages_entity_1.GroupsMessages)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _b : Object])
+    __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(1, (0, typeorm_1.InjectRepository)(group_user_entity_1.Group_User)),
+    __param(2, (0, typeorm_1.InjectRepository)(groups_entity_1.groups)),
+    __param(3, (0, typeorm_1.InjectRepository)(groupmessages_entity_1.GroupsMessages)),
+    __param(4, (0, typeorm_1.InjectRepository)(messages_entity_1.Messages)),
+    __metadata("design:paramtypes", [Object, Object, Object, Object, Object])
 ], ChatService);
 exports.ChatService = ChatService;
 
@@ -402,11 +416,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GroupsMessages = void 0;
 const typeorm_1 = __webpack_require__(11);
 const groups_entity_1 = __webpack_require__(12);
+const messages_entity_1 = __webpack_require__(14);
 const user_entity_1 = __webpack_require__(13);
 let GroupsMessages = class GroupsMessages {
 };
@@ -415,11 +430,7 @@ __decorate([
     __metadata("design:type", Number)
 ], GroupsMessages.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], GroupsMessages.prototype, "date", void 0);
-__decorate([
-    (0, typeorm_1.OneToOne)(() => user_entity_1.User, (user) => user),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user),
     (0, typeorm_1.JoinColumn)(),
     __metadata("design:type", typeof (_a = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _a : Object)
 ], GroupsMessages.prototype, "from", void 0);
@@ -429,8 +440,9 @@ __decorate([
     __metadata("design:type", typeof (_b = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _b : Object)
 ], GroupsMessages.prototype, "group", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
+    (0, typeorm_1.ManyToOne)(() => messages_entity_1.Messages, (messages) => messages),
+    (0, typeorm_1.JoinColumn)(),
+    __metadata("design:type", typeof (_c = typeof messages_entity_1.Messages !== "undefined" && messages_entity_1.Messages) === "function" ? _c : Object)
 ], GroupsMessages.prototype, "message", void 0);
 GroupsMessages = __decorate([
     (0, typeorm_1.Entity)()
@@ -541,27 +553,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Messages = void 0;
 const typeorm_1 = __webpack_require__(11);
-const user_entity_1 = __webpack_require__(13);
 let Messages = class Messages {
 };
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)
 ], Messages.prototype, "id", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user),
-    (0, typeorm_1.JoinColumn)(),
-    __metadata("design:type", typeof (_a = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _a : Object)
-], Messages.prototype, "from", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user),
-    (0, typeorm_1.JoinColumn)(),
-    __metadata("design:type", typeof (_b = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _b : Object)
-], Messages.prototype, "to", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
@@ -578,237 +578,6 @@ exports.Messages = Messages;
 
 /***/ }),
 /* 15 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AppService = void 0;
-const common_1 = __webpack_require__(6);
-let AppService = class AppService {
-};
-AppService = __decorate([
-    (0, common_1.Injectable)()
-], AppService);
-exports.AppService = AppService;
-
-
-/***/ }),
-/* 16 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.RegisterModule = void 0;
-const common_1 = __webpack_require__(6);
-const user_entity_1 = __webpack_require__(13);
-const register_controller_1 = __webpack_require__(17);
-const register_service_1 = __webpack_require__(18);
-const typeorm_1 = __webpack_require__(7);
-const groups_entity_1 = __webpack_require__(12);
-const group_user_entity_1 = __webpack_require__(19);
-const groupmessages_entity_1 = __webpack_require__(10);
-let RegisterModule = class RegisterModule {
-};
-RegisterModule = __decorate([
-    (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, groups_entity_1.groups, group_user_entity_1.Group_User, groupmessages_entity_1.GroupsMessages])],
-        providers: [register_service_1.RegisterService],
-        controllers: [register_controller_1.RegisterController],
-        exports: [typeorm_1.TypeOrmModule],
-    })
-], RegisterModule);
-exports.RegisterModule = RegisterModule;
-
-
-/***/ }),
-/* 17 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b, _c, _d;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.RegisterController = void 0;
-const common_1 = __webpack_require__(6);
-const register_service_1 = __webpack_require__(18);
-let RegisterController = class RegisterController {
-    constructor(regService) {
-        this.regService = regService;
-    }
-    async joinToGroup(body) {
-        return await this.regService.JoinToGroup(body);
-    }
-    leaveGroup(id) {
-        this.regService.leaveGroup(id);
-    }
-    async getUsers() {
-        return await this.regService.getUsers();
-    }
-    async getGroups() {
-        return await this.regService.getGroups();
-    }
-    async getGroupData(body) {
-        return await this.regService.GetGroupData(Object.keys(body)[0]);
-    }
-};
-__decorate([
-    (0, common_1.Post)('/joinToGroup'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _b : Object]),
-    __metadata("design:returntype", Promise)
-], RegisterController.prototype, "joinToGroup", null);
-__decorate([
-    (0, common_1.Post)('/leaveGroup'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _c : Object]),
-    __metadata("design:returntype", void 0)
-], RegisterController.prototype, "leaveGroup", null);
-__decorate([
-    (0, common_1.Get)('/getUsers'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], RegisterController.prototype, "getUsers", null);
-__decorate([
-    (0, common_1.Get)('/getGroups'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], RegisterController.prototype, "getGroups", null);
-__decorate([
-    (0, common_1.Post)('/getGroupData'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof common_1.RawBodyRequest !== "undefined" && common_1.RawBodyRequest) === "function" ? _d : Object]),
-    __metadata("design:returntype", Promise)
-], RegisterController.prototype, "getGroupData", null);
-RegisterController = __decorate([
-    (0, common_1.Controller)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof register_service_1.RegisterService !== "undefined" && register_service_1.RegisterService) === "function" ? _a : Object])
-], RegisterController);
-exports.RegisterController = RegisterController;
-
-
-/***/ }),
-/* 18 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b, _c, _d, _e, _f, _g, _h;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.RegisterService = void 0;
-const common_1 = __webpack_require__(6);
-const typeorm_1 = __webpack_require__(7);
-const groups_entity_1 = __webpack_require__(12);
-const user_entity_1 = __webpack_require__(13);
-const group_user_entity_1 = __webpack_require__(19);
-const groupmessages_entity_1 = __webpack_require__(10);
-let RegisterService = class RegisterService {
-    constructor(users, group_user, Groups, GroupMessages) {
-        this.users = users;
-        this.group_user = group_user;
-        this.Groups = Groups;
-        this.GroupMessages = GroupMessages;
-    }
-    async JoinToGroup(user) {
-        console.log(user);
-        let group = await this.users.find({
-            relations: { group: true },
-        });
-        let groupUsers = group.filter((el) => el.group.id === +user.group.group);
-        let contains = 0;
-        console.log(groupUsers);
-        for (let i = 0; i < groupUsers.length; i++) {
-            if (groupUsers[i].username === user.group.username) {
-                console.log(1);
-                contains = 1;
-                return user.group.username + "_" + Math.round(Math.random() * 100);
-            }
-        }
-        if (groupUsers.length < 5 && contains === 0) {
-            console.log(2);
-            let User = await this.users.save(user.group);
-            this.group_user.save({
-                group: user.group.group,
-                user: User.id,
-            });
-            return "Ok";
-        }
-    }
-    async getGroups() {
-        return await this.Groups.find();
-    }
-    async leaveGroup(id) {
-        let user = await this.users.findOneBy(id);
-        await this.users.delete(user);
-    }
-    async getUsers() {
-        return await this.group_user.find({
-            relations: ["user", "group"],
-        });
-    }
-    async GetGroupData(id) {
-        let users = await this.GroupMessages.find({
-            relations: { group: true, from: true },
-        });
-        let groupUsers = users.filter((el) => el.group.id === +id);
-        console.log(groupUsers);
-    }
-};
-RegisterService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __param(1, (0, typeorm_1.InjectRepository)(group_user_entity_1.Group_User)),
-    __param(2, (0, typeorm_1.InjectRepository)(groups_entity_1.groups)),
-    __param(3, (0, typeorm_1.InjectRepository)(groupmessages_entity_1.GroupsMessages)),
-    __metadata("design:paramtypes", [Object, Object, Object, Object])
-], RegisterService);
-exports.RegisterService = RegisterService;
-
-
-/***/ }),
-/* 19 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -850,7 +619,163 @@ exports.Group_User = Group_User;
 
 
 /***/ }),
+/* 16 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AppService = void 0;
+const common_1 = __webpack_require__(6);
+let AppService = class AppService {
+};
+AppService = __decorate([
+    (0, common_1.Injectable)()
+], AppService);
+exports.AppService = AppService;
+
+
+/***/ }),
+/* 17 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterModule = void 0;
+const common_1 = __webpack_require__(6);
+const user_entity_1 = __webpack_require__(13);
+const register_controller_1 = __webpack_require__(18);
+const register_service_1 = __webpack_require__(19);
+const typeorm_1 = __webpack_require__(7);
+const groups_entity_1 = __webpack_require__(12);
+const group_user_entity_1 = __webpack_require__(15);
+const groupmessages_entity_1 = __webpack_require__(10);
+const user_user_message_entity_1 = __webpack_require__(20);
+let RegisterModule = class RegisterModule {
+};
+RegisterModule = __decorate([
+    (0, common_1.Module)({
+        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, groups_entity_1.groups, group_user_entity_1.Group_User, groupmessages_entity_1.GroupsMessages, user_user_message_entity_1.UserToUserMessage])],
+        providers: [register_service_1.RegisterService],
+        controllers: [register_controller_1.RegisterController],
+        exports: [typeorm_1.TypeOrmModule],
+    })
+], RegisterModule);
+exports.RegisterModule = RegisterModule;
+
+
+/***/ }),
+/* 18 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterController = void 0;
+const common_1 = __webpack_require__(6);
+const register_service_1 = __webpack_require__(19);
+let RegisterController = class RegisterController {
+    constructor(regService) {
+        this.regService = regService;
+    }
+};
+RegisterController = __decorate([
+    (0, common_1.Controller)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof register_service_1.RegisterService !== "undefined" && register_service_1.RegisterService) === "function" ? _a : Object])
+], RegisterController);
+exports.RegisterController = RegisterController;
+
+
+/***/ }),
+/* 19 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterService = void 0;
+const common_1 = __webpack_require__(6);
+let RegisterService = class RegisterService {
+};
+RegisterService = __decorate([
+    (0, common_1.Injectable)()
+], RegisterService);
+exports.RegisterService = RegisterService;
+
+
+/***/ }),
 /* 20 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UserToUserMessage = void 0;
+const typeorm_1 = __webpack_require__(11);
+const user_entity_1 = __webpack_require__(13);
+let UserToUserMessage = class UserToUserMessage {
+};
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
+], UserToUserMessage.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user),
+    (0, typeorm_1.JoinColumn)(),
+    __metadata("design:type", typeof (_a = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _a : Object)
+], UserToUserMessage.prototype, "from", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user),
+    (0, typeorm_1.JoinColumn)(),
+    __metadata("design:type", typeof (_b = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _b : Object)
+], UserToUserMessage.prototype, "to", void 0);
+UserToUserMessage = __decorate([
+    (0, typeorm_1.Entity)()
+], UserToUserMessage);
+exports.UserToUserMessage = UserToUserMessage;
+
+
+/***/ }),
+/* 21 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -885,7 +810,7 @@ exports.HomeController = HomeController;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -899,7 +824,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HomeModule = void 0;
 const common_1 = __webpack_require__(6);
-const home_service_1 = __webpack_require__(22);
+const home_service_1 = __webpack_require__(23);
 let HomeModule = class HomeModule {
 };
 HomeModule = __decorate([
@@ -911,7 +836,7 @@ exports.HomeModule = HomeModule;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -934,7 +859,7 @@ exports.HomeService = HomeService;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -950,14 +875,17 @@ exports.ChatModule = void 0;
 const common_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(7);
 const groupmessages_entity_1 = __webpack_require__(10);
+const groups_entity_1 = __webpack_require__(12);
+const group_user_entity_1 = __webpack_require__(15);
 const messages_entity_1 = __webpack_require__(14);
-const chat_gateway_1 = __webpack_require__(24);
+const user_entity_1 = __webpack_require__(13);
+const chat_gateway_1 = __webpack_require__(25);
 const chat_service_1 = __webpack_require__(9);
 let ChatModule = class ChatModule {
 };
 ChatModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([messages_entity_1.Messages, groupmessages_entity_1.GroupsMessages])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, groups_entity_1.groups, messages_entity_1.Messages, groupmessages_entity_1.GroupsMessages, group_user_entity_1.Group_User])],
         providers: [chat_service_1.ChatService, chat_gateway_1.ChatGateway],
     })
 ], ChatModule);
@@ -965,7 +893,7 @@ exports.ChatModule = ChatModule;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -979,70 +907,99 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatGateway = void 0;
 const common_1 = __webpack_require__(6);
-const websockets_1 = __webpack_require__(25);
-const message_dto_1 = __webpack_require__(26);
+const websockets_1 = __webpack_require__(26);
 const chat_service_1 = __webpack_require__(9);
+const socket_io_1 = __webpack_require__(27);
+const typeorm_1 = __webpack_require__(7);
+const group_user_entity_1 = __webpack_require__(15);
+const typeorm_2 = __webpack_require__(11);
 let ChatGateway = class ChatGateway {
-    constructor(chatService) {
+    constructor(chatService, group_user) {
         this.chatService = chatService;
+        this.group_user = group_user;
     }
-    afterInit(server) {
-        console.log("Init", server);
+    afterInit(server) { }
+    async handleConnection(socket) {
+        let messages = await this.chatService.GetGroupData(socket.id);
+        socket.emit("messages", messages);
     }
-    handleConnection(socket) {
-        process.nextTick(() => {
-            socket.emit("messages");
+    async handleDisconnect(socket) {
+        let user = await this.group_user.findOne({
+            where: { user: socket.id },
+            relations: { user: true, group: true },
         });
+        if (user) {
+            this.server.emit("users-changed", { user: user.username, event: "left" });
+        }
     }
-    handleDisconnect(socket) {
-        console.log("disconected", socket);
+    async getGroupData(client, data) {
+        client.emit('message', data);
+        console.log(data);
+    }
+    sendMessage(message) {
+        this.chatService.sendGroupMessage(message);
     }
     handleNewMessage(chat, socket) {
-        this.chatService.sendMessage(chat);
+        console.log(chat);
+        this.chatService.sendGroupMessage(chat);
         socket.emit("newChat", chat);
         socket.broadcast.emit("newChat", chat);
     }
 };
 __decorate([
+    (0, websockets_1.WebSocketServer)(),
+    __metadata("design:type", typeof (_c = typeof socket_io_1.Server !== "undefined" && socket_io_1.Server) === "function" ? _c : Object)
+], ChatGateway.prototype, "server", void 0);
+__decorate([
+    (0, websockets_1.SubscribeMessage)("sendMessage"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_d = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _d : Object, String]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "getGroupData", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)("sendMessage"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_e = typeof sendMessageTypes !== "undefined" && sendMessageTypes) === "function" ? _e : Object]),
+    __metadata("design:returntype", void 0)
+], ChatGateway.prototype, "sendMessage", null);
+__decorate([
     (0, common_1.Bind)((0, websockets_1.MessageBody)(), (0, websockets_1.ConnectedSocket)()),
     (0, websockets_1.SubscribeMessage)("chat"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof message_dto_1.MessageDto !== "undefined" && message_dto_1.MessageDto) === "function" ? _b : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_f = typeof sendMessageTypes !== "undefined" && sendMessageTypes) === "function" ? _f : Object, typeof (_g = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _g : Object]),
     __metadata("design:returntype", void 0)
 ], ChatGateway.prototype, "handleNewMessage", null);
 ChatGateway = __decorate([
-    (0, websockets_1.WebSocketGateway)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _a : Object])
+    (0, websockets_1.WebSocketGateway)({ cors: "*:*" }),
+    __param(1, (0, typeorm_1.InjectRepository)(group_user_entity_1.Group_User)),
+    __metadata("design:paramtypes", [typeof (_a = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _b : Object])
 ], ChatGateway);
 exports.ChatGateway = ChatGateway;
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
-/* 26 */
-/***/ ((__unused_webpack_module, exports) => {
+/* 27 */
+/***/ ((module) => {
 
 "use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MessageDto = void 0;
-class MessageDto {
-}
-exports.MessageDto = MessageDto;
-
+module.exports = require("socket.io");
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ ((module) => {
 
 "use strict";
@@ -1110,7 +1067,7 @@ module.exports = require("cors");
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("56fcfa6d0cc1a592fd01")
+/******/ 		__webpack_require__.h = () => ("d46557c7a523376327d5")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */

@@ -1,5 +1,5 @@
 import { CustomTransportStrategy, Server } from '@nestjs/microservices';
-import { Socket } from 'socket.io-client';
+import { Socket } from 'socket.io';
 
 export class SocketIoClientStrategy
   extends Server

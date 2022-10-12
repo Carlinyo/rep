@@ -1,0 +1,21 @@
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url("/public/joinBackground.jpeg");
+  height: 100vh;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.form_part1_container {
+  width: 100%;
+}
+.form {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  gap: 25px;
+}

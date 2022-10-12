@@ -12,7 +12,7 @@ import { GroupsMessages } from "./model/groupmessages.entity";
 import { ChatService } from "./chat/chat.service";
 import { ChatModule } from "./chat/chat.module";
 import { Group_User } from "./model/group_user.entity";
-
+import { UserToUserMessage } from "./model/user_user_message.entity";
 
 @Module({
   imports: [
@@ -23,7 +23,14 @@ import { Group_User } from "./model/group_user.entity";
       username: "root",
       password: "asdasd123",
       database: "chat_db",
-      entities: [User, Messages, groups, GroupsMessages, Group_User],
+      entities: [
+        User,
+        Messages,
+        groups,
+        GroupsMessages,
+        Group_User,
+        UserToUserMessage,
+      ],
       synchronize: true,
       autoLoadEntities: true,
     }),

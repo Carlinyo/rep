@@ -11,12 +11,6 @@ import { User } from "./user.entity";
 export class Messages {
   @PrimaryGeneratedColumn()
   id: number;
-  @ManyToOne(() => User, (user: User) => user)
-  @JoinColumn()
-  from: User;
-  @ManyToOne(() => User, (user: User) => user)
-  @JoinColumn()
-  to: User;
   @Column()
   message: string;
   @Column()

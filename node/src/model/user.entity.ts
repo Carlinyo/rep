@@ -1,3 +1,4 @@
+
 import {
   Column,
   Entity,
@@ -5,6 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { GroupsMessages } from "./groupmessages.entity";
 import { groups } from "./groups.entity";
 
 @Entity()

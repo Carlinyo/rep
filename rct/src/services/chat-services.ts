@@ -13,8 +13,12 @@ const getUsers = async () =>{
 }
 
 const joinGroup = async (group:Groups)=>{
-    return await axios.post('http://localhost:5001/joinToGroup',{group}).then((data:AxiosResponse<string>)=>{
-        return data.data
+    return await axios.post('http://localhost:5001/joinToGroup',{group}).then((data:AxiosResponse<any>)=>{
+        if('user' in data.data){
+            localStorage.userId = data.data.user?.id
+        }
+        console.log(data.data.status)
+        return data.data.status
     })
 }
 
@@ -24,9 +28,16 @@ const getGroupData = async (id:string | undefined)=>{
     })
 }
 
+const sendToGroupMessage = async (groupData:SendGroupData)=>{
+    return await axios.post('http://localhost:5001/sendMessageToGroup',groupData).then((data:AxiosResponse<GroupMessages>)=>{
+        return data.data
+    })
+}
+
 export const ChatService = {
     getGroups,
     getUsers,
     joinGroup,
-    getGroupData
+    getGroupData,
+    sendToGroupMessage
 };
