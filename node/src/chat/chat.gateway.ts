@@ -1,7 +1,5 @@
-import { Bind, RawBodyRequest } from "@nestjs/common";
+import { RawBodyRequest } from "@nestjs/common";
 import {
-  ConnectedSocket,
-  MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -14,7 +12,7 @@ import { Group_User } from "src/model/group_user.entity";
 import { Group_UserDto } from "src/dto/group_user.dto";
 import { Repository } from "typeorm";
 
-@WebSocketGateway({ cors: "*:*" })
+@WebSocketGateway({ cors: "*:*", transport: ["websocket"] })
 export class ChatGateway implements NestGateway {
   constructor(
     private chatService: ChatService,
@@ -23,42 +21,55 @@ export class ChatGateway implements NestGateway {
   ) {}
 
   @WebSocketServer()
-  server: Server;
+  private server: Server;
 
-  afterInit(server: any) {}
-  async handleConnection(socket: Socket) {
-    let messages = await this.chatService.GetGroupData(socket.id);
-    socket.emit("messages", messages);
+  afterInit(server: Server) {}
+  async handleConnection(socket: Socket) {}
+  async handleDisconnect(socket: Socket) {}
+  @SubscribeMessage("getUsers")
+  async getUsers(socket: Socket) {
+    let users = await this.chatService.getUsers();
+    socket.emit("getUsers", users);
   }
-  async handleDisconnect(socket: Socket) {
-    let user = await this.group_user.findOne({
-      where: { user: socket.id },
-      relations: { user: true, group: true },
-    });
-    if (user) {
-      this.server.emit("users-changed", { user: user.username, event: "left" });
+  @SubscribeMessage("getGroups")
+  async getGroups(socket: Socket) {
+    let groups = await this.chatService.getGroups();
+    socket.emit("getGroups", groups);
+  }
+  @SubscribeMessage("groupMessage")
+  async getGroupMessage(socket: Socket, message: any) {
+    let data;
+    if (!message.status) {
+      console.log(message)
+      await this.chatService.sendGroupMessage(message);
+      data = await this.chatService.GetGroupData(message.group);
+    } else if (message.status) {
+      data = await this.chatService.GetGroupData(message.id);
+    }
+    socket.emit("groupData", data);
+    socket.broadcast.emit("groupData", data);
+  }
+  @SubscribeMessage("join")
+  async joinToGroup(socket: Socket, data: any) {
+    let Data = await this.chatService.JoinToGroup(data);
+    socket.emit("status", Data);
+  }
+  @SubscribeMessage("input")
+  async onInput(socket: Socket, data: any) {
+    if (data.typing) {
+      socket.broadcast.emit("typing", { from: data.userId, status: "true" });
+    } else {
+      socket.broadcast.emit("typing", { from: data.userId, status: "false" });
     }
   }
-
-  @SubscribeMessage("sendMessage")
-  async getGroupData(client:Socket,data: string) {
-    client.emit('message',data)
+  @SubscribeMessage("joinedUser")
+  async getJoinedUser(socket: Socket, data: any) {
+    let user = await this.chatService.getUser(data.user);
+    data.from = data.user;
+    delete data.user
+    data.message = { message: user[0].username + " is joined" };
+    data.message.date = new Date().getHours() + ":" + new Date().getMinutes();
     console.log(data);
-    // let Data = await this.chatService.GetGroupData(data);
-    // this.server.emit('groupData',Data)
-  }
-
-  @SubscribeMessage("sendMessage")
-  sendMessage(message: sendMessageTypes) {
-    this.chatService.sendGroupMessage(message);
-  }
-
-  @Bind(MessageBody(), ConnectedSocket())
-  @SubscribeMessage("chat")
-  handleNewMessage(chat: sendMessageTypes, socket: Socket) {
-    console.log(chat)
-    this.chatService.sendGroupMessage(chat);
-    socket.emit("newChat", chat);
-    socket.broadcast.emit("newChat", chat);
+    // await this.chatService.sendGroupMessage(data);
   }
 }

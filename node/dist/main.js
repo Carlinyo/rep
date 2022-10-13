@@ -328,12 +328,12 @@ const group_user_entity_1 = __webpack_require__(15);
 const messages_entity_1 = __webpack_require__(14);
 const user_entity_1 = __webpack_require__(13);
 let ChatService = class ChatService {
-    constructor(users, group_user, Groups, gMessages, messages) {
+    constructor(users, group_user, gMessages, messages, Groups) {
         this.users = users;
         this.group_user = group_user;
-        this.Groups = Groups;
         this.gMessages = gMessages;
         this.messages = messages;
+        this.Groups = Groups;
     }
     async sendGroupMessage(body) {
         let Message = await this.messages.save(body.message);
@@ -347,36 +347,31 @@ let ChatService = class ChatService {
         let group = await this.users.find({
             relations: { group: true },
         });
-        let groupUsers = group.filter((el) => el.group.id === +user.group.group);
+        let groupUsers = group.filter((el) => el.group.id === +user.group);
         let contains = 0;
         for (let i = 0; i < groupUsers.length; i++) {
-            if (groupUsers[i].username === user.group.username) {
+            if (groupUsers[i].username === user.username) {
                 contains = 1;
                 return {
-                    status: user.group.username + "_" + Math.round(Math.random() * 100),
+                    status: user.username + "_" + Math.round(Math.random() * 100),
                 };
             }
         }
         if (groupUsers.length < 5 && contains === 0) {
-            let User = await this.users.save(user.group);
+            let User = await this.users.save(user);
             await this.group_user.save({
-                group: user.group.group,
+                group: user.group,
                 user: User.id,
             });
             return { user: User, status: "Ok" };
         }
     }
-    async getGroups() {
-        return await this.Groups.find();
+    async getUser(id) {
+        return await this.users.find({ where: { id: id } });
     }
     async leaveGroup(id) {
         let user = await this.users.findOneBy(id);
         await this.users.delete(user);
-    }
-    async getUsers() {
-        return await this.group_user.find({
-            relations: ["user", "group"],
-        });
     }
     async GetGroupData(id) {
         let groupMessages = await this.gMessages.find({
@@ -388,14 +383,22 @@ let ChatService = class ChatService {
         let users = await this.users.find({ relations: ["group"] }), Users = users.filter((el) => el.group.id === +id);
         return { messages: groupUsers, users: Users };
     }
+    async getGroups() {
+        return await this.Groups.find();
+    }
+    async getUsers() {
+        return await this.group_user.find({
+            relations: ["user", "group"],
+        });
+    }
 };
 ChatService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __param(1, (0, typeorm_1.InjectRepository)(group_user_entity_1.Group_User)),
-    __param(2, (0, typeorm_1.InjectRepository)(groups_entity_1.groups)),
-    __param(3, (0, typeorm_1.InjectRepository)(groupmessages_entity_1.GroupsMessages)),
-    __param(4, (0, typeorm_1.InjectRepository)(messages_entity_1.Messages)),
+    __param(2, (0, typeorm_1.InjectRepository)(groupmessages_entity_1.GroupsMessages)),
+    __param(3, (0, typeorm_1.InjectRepository)(messages_entity_1.Messages)),
+    __param(4, (0, typeorm_1.InjectRepository)(groups_entity_1.groups)),
     __metadata("design:paramtypes", [Object, Object, Object, Object, Object])
 ], ChatService);
 exports.ChatService = ChatService;
@@ -721,13 +724,30 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RegisterService = void 0;
 const common_1 = __webpack_require__(6);
+const typeorm_1 = __webpack_require__(7);
+const groups_entity_1 = __webpack_require__(12);
+const group_user_entity_1 = __webpack_require__(15);
 let RegisterService = class RegisterService {
+    constructor(Groups, group_user) {
+        this.Groups = Groups;
+        this.group_user = group_user;
+    }
 };
 RegisterService = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(groups_entity_1.groups)),
+    __param(1, (0, typeorm_1.InjectRepository)(group_user_entity_1.Group_User)),
+    __metadata("design:paramtypes", [Object, Object])
 ], RegisterService);
 exports.RegisterService = RegisterService;
 
@@ -910,10 +930,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatGateway = void 0;
-const common_1 = __webpack_require__(6);
 const websockets_1 = __webpack_require__(26);
 const chat_service_1 = __webpack_require__(9);
 const socket_io_1 = __webpack_require__(27);
@@ -926,31 +945,48 @@ let ChatGateway = class ChatGateway {
         this.group_user = group_user;
     }
     afterInit(server) { }
-    async handleConnection(socket) {
-        let messages = await this.chatService.GetGroupData(socket.id);
-        socket.emit("messages", messages);
+    async handleConnection(socket) { }
+    async handleDisconnect(socket) { }
+    async getUsers(socket) {
+        let users = await this.chatService.getUsers();
+        socket.emit("getUsers", users);
     }
-    async handleDisconnect(socket) {
-        let user = await this.group_user.findOne({
-            where: { user: socket.id },
-            relations: { user: true, group: true },
-        });
-        if (user) {
-            this.server.emit("users-changed", { user: user.username, event: "left" });
+    async getGroups(socket) {
+        let groups = await this.chatService.getGroups();
+        socket.emit("getGroups", groups);
+    }
+    async getGroupMessage(socket, message) {
+        let data;
+        if (!message.status) {
+            console.log(message);
+            await this.chatService.sendGroupMessage(message);
+            data = await this.chatService.GetGroupData(message.group);
+        }
+        else if (message.status) {
+            data = await this.chatService.GetGroupData(message.id);
+        }
+        socket.emit("groupData", data);
+        socket.broadcast.emit("groupData", data);
+    }
+    async joinToGroup(socket, data) {
+        let Data = await this.chatService.JoinToGroup(data);
+        socket.emit("status", Data);
+    }
+    async onInput(socket, data) {
+        if (data.typing) {
+            socket.broadcast.emit("typing", { from: data.userId, status: "true" });
+        }
+        else {
+            socket.broadcast.emit("typing", { from: data.userId, status: "false" });
         }
     }
-    async getGroupData(client, data) {
-        client.emit('message', data);
+    async getJoinedUser(socket, data) {
+        let user = await this.chatService.getUser(data.user);
+        data.from = data.user;
+        delete data.user;
+        data.message = { message: user[0].username + " is joined" };
+        data.message.date = new Date().getHours() + ":" + new Date().getMinutes();
         console.log(data);
-    }
-    sendMessage(message) {
-        this.chatService.sendGroupMessage(message);
-    }
-    handleNewMessage(chat, socket) {
-        console.log(chat);
-        this.chatService.sendGroupMessage(chat);
-        socket.emit("newChat", chat);
-        socket.broadcast.emit("newChat", chat);
     }
 };
 __decorate([
@@ -958,26 +994,43 @@ __decorate([
     __metadata("design:type", typeof (_c = typeof socket_io_1.Server !== "undefined" && socket_io_1.Server) === "function" ? _c : Object)
 ], ChatGateway.prototype, "server", void 0);
 __decorate([
-    (0, websockets_1.SubscribeMessage)("sendMessage"),
+    (0, websockets_1.SubscribeMessage)("getUsers"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _d : Object, String]),
+    __metadata("design:paramtypes", [typeof (_d = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _d : Object]),
     __metadata("design:returntype", Promise)
-], ChatGateway.prototype, "getGroupData", null);
+], ChatGateway.prototype, "getUsers", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)("sendMessage"),
+    (0, websockets_1.SubscribeMessage)("getGroups"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof sendMessageTypes !== "undefined" && sendMessageTypes) === "function" ? _e : Object]),
-    __metadata("design:returntype", void 0)
-], ChatGateway.prototype, "sendMessage", null);
+    __metadata("design:paramtypes", [typeof (_e = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _e : Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "getGroups", null);
 __decorate([
-    (0, common_1.Bind)((0, websockets_1.MessageBody)(), (0, websockets_1.ConnectedSocket)()),
-    (0, websockets_1.SubscribeMessage)("chat"),
+    (0, websockets_1.SubscribeMessage)("groupMessage"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof sendMessageTypes !== "undefined" && sendMessageTypes) === "function" ? _f : Object, typeof (_g = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _g : Object]),
-    __metadata("design:returntype", void 0)
-], ChatGateway.prototype, "handleNewMessage", null);
+    __metadata("design:paramtypes", [typeof (_f = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _f : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "getGroupMessage", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)("join"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_g = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _g : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "joinToGroup", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)("input"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_h = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _h : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "onInput", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)("joinedUser"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_j = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _j : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "getJoinedUser", null);
 ChatGateway = __decorate([
-    (0, websockets_1.WebSocketGateway)({ cors: "*:*" }),
+    (0, websockets_1.WebSocketGateway)({ cors: "*:*", transport: ["websocket"] }),
     __param(1, (0, typeorm_1.InjectRepository)(group_user_entity_1.Group_User)),
     __metadata("design:paramtypes", [typeof (_a = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _b : Object])
 ], ChatGateway);
@@ -1067,7 +1120,7 @@ module.exports = require("cors");
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("d46557c7a523376327d5")
+/******/ 		__webpack_require__.h = () => ("90f8a42fa392951220bf")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
