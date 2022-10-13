@@ -15,7 +15,6 @@ const getUsers = async () =>{
 const joinGroup = async (group:Groups)=>{
     return await axios.post('http://localhost:5001/joinToGroup',{group}).then((data:AxiosResponse<any>)=>{
         if('user' in data.data){
-            localStorage.userId = data.data.user?.id
         }
         console.log(data.data.status)
         return data.data.status

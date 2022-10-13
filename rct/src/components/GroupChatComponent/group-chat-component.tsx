@@ -1,30 +1,28 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import { GetGroupDataA } from "../../actions/chatActions";
 import {
   useAppDispatch,
   useAppSelector,
-  useOnClickOutside,
 } from "../../utils/helpers";
 import GroupChatStyles from "./style.module.css";
 import io from "socket.io-client";
 
 import "bootstrap/dist/css/bootstrap.css";
-import { ChatService } from "../../services/chat-services";
 import LeftMessages from "../leftMessages/left-messages";
 import RightMessages from "../rightMessages/right-messages";
+import { getGroupData } from "../../store/reducers/chatReducer";
 
 const GroupChatComponent = () => {
   const [active, setActive] = useState(false);
-  const ref: any = useRef();
-  const socket = io();
-  useOnClickOutside(ref, () => setActive(false));
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+  const socket = io("http://localhost:5001");
+  const [joinedUser, setJoinedUser] = useState<string>("");
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: {},
   } = useForm();
   const { id } = useParams();
   const { groupData } = useAppSelector((state) => state.ChatR);
@@ -32,22 +30,34 @@ const GroupChatComponent = () => {
   const [isConnected, setIsConnected] = useState(socket.connected);
   useEffect(() => {
     socket.on("connect", () => {
-      console.log('connected')
+      socket.emit("joinedUser", {user:localStorage.getItem("userId"),group:id});
+      socket.emit("message", id);
       setIsConnected(true);
+      socket.emit("groupMessage", { id, status: 100 });
     });
-    socket.on('message',(message)=>{
-      console.log(message)
-    })
+    socket.on("typing", (data) => {
+      if (
+        data.status === "false" ||
+        data.from === localStorage.getItem("userId")
+      ) {
+        setIsTyping(false);
+      } else if (data.status === "true") {
+        setIsTyping(true);
+      }
+    });
+    socket.on("groupData", (data) => {
+      console.log(data);
+      dispatch(getGroupData(data));
+    });
     socket.on("disconnect", () => {
       setIsConnected(false);
-    });
-    socket.on("getgroupData", (data) => {
-        console.log(data)
     });
     return () => {
       socket.off("connect");
       socket.off("disconnect");
-      socket.off("pong");
+      socket.off("groupData");
+      socket.off("typing");
+      socket.off("groupData");
     };
   }, []);
   return (
@@ -86,15 +96,28 @@ const GroupChatComponent = () => {
             );
           })}
           {active && (
-            <div ref={ref}>
+            <div>
               {groupData?.users?.map((user: User, index: number) => {
                 return <p key={index}>{user.username}</p>;
               })}
             </div>
           )}
+          {isTyping && (
+            <div className={GroupChatStyles.chat_bubble}>
+              <div className={GroupChatStyles.typing}>
+                <div className={GroupChatStyles.dot}></div>
+                <div className={GroupChatStyles.dot}></div>
+                <div className={GroupChatStyles.dot}></div>
+              </div>
+            </div>
+          )}
           <form
             onSubmit={handleSubmit((data: FieldValues | any) => {
-              let date = new Date().getHours() + ":" + new Date().getMinutes();
+              let minutes =
+                +new Date().getMinutes() < 10
+                  ? "0" + new Date().getMinutes()
+                  : new Date().getMinutes();
+              let date = new Date().getHours() + ":" + minutes;
               data.group = id;
               let message = { date, message: data.message };
               let groupMessage = {
@@ -102,7 +125,7 @@ const GroupChatComponent = () => {
                 message,
                 group: id,
               };
-              socket.emit("chat", groupMessage);
+              socket.emit("groupMessage", groupMessage);
               reset();
             })}
             className={GroupChatStyles.send_form}
@@ -111,6 +134,12 @@ const GroupChatComponent = () => {
               placeholder="Message..."
               className="form-control"
               maxLength={255}
+              onInput={(e: any) =>
+                socket.emit("input", {
+                  typing: e.target.value,
+                  userId: localStorage.getItem("userId"),
+                })
+              }
               {...register("message", { required: true })}
             ></textarea>
             <button className="btn btn-success">Send</button>

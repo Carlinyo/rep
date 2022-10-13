@@ -1,13 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { GetGroupsA, GetUsersA, JoinGroupA } from "../../actions/chatActions";
 import {
   findUsersCount,
   useAppDispatch,
   useAppSelector,
 } from "../../utils/helpers";
 import JoinComponentStyles from "./style.module.css";
+import { io } from "socket.io-client";
+import { getGroups, getUsers } from "../../store/reducers/chatReducer";
 
 const JoinComponent = () => {
   const navigate = useNavigate();
@@ -17,10 +18,31 @@ const JoinComponent = () => {
     formState: { errors },
   } = useForm();
   const { groups, users, joinReqData } = useAppSelector((state) => state.ChatR);
+  const socket = io("http://localhost:5001");
+  const [isConnected, setIsConnected] = useState(socket.connected);
   const dispatch = useAppDispatch();
   useEffect(() => {
-    dispatch(GetUsersA());
-    dispatch(GetGroupsA());
+    socket.on("connect", () => {
+      socket.emit("getGroups");
+      socket.emit("getUsers");
+      setIsConnected(true);
+    });
+    socket.on("getUsers", (users) => {
+      dispatch(getUsers(users));
+    });
+    socket.on("getGroups", (groups) => {
+      dispatch(getGroups(groups));
+    });
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+    });
+    return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("getUsers");
+      socket.off("getGroups");
+      socket.off("status");
+    };
   }, []);
 
   return (
@@ -28,9 +50,14 @@ const JoinComponent = () => {
       <form
         className={JoinComponentStyles.form}
         onSubmit={handleSubmit((data: any) => {
-          dispatch(JoinGroupA(data));
+          socket.emit("join", data);
+          socket.on("status", (data) => {
+            if (data.status === "Ok") {
+              localStorage.userId = data.user?.id;
+              navigate(`/group/${data.user.group}`);
+            }
+          });
           if (joinReqData === "Ok") {
-            navigate(`/group/${+data.group}`);
           }
         })}
       >
