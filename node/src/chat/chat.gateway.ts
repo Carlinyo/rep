@@ -38,9 +38,9 @@ export class ChatGateway implements NestGateway {
   }
   @SubscribeMessage("groupMessage")
   async getGroupMessage(socket: Socket, message: any) {
+    console.log(message);
     let data;
     if (!message.status) {
-      console.log(message)
       await this.chatService.sendGroupMessage(message);
       data = await this.chatService.GetGroupData(message.group);
     } else if (message.status) {
@@ -62,14 +62,9 @@ export class ChatGateway implements NestGateway {
       socket.broadcast.emit("typing", { from: data.userId, status: "false" });
     }
   }
-  @SubscribeMessage("joinedUser")
-  async getJoinedUser(socket: Socket, data: any) {
-    let user = await this.chatService.getUser(data.user);
-    data.from = data.user;
-    delete data.user
-    data.message = { message: user[0].username + " is joined" };
-    data.message.date = new Date().getHours() + ":" + new Date().getMinutes();
-    console.log(data);
-    // await this.chatService.sendGroupMessage(data);
+  @SubscribeMessage("user")
+  async joinedUsername(socket: Socket, username: string) {
+    let date = new Date().getHours() + new Date().getMinutes();
+    let message = { message: username + " is joined", date: date };
   }
 }

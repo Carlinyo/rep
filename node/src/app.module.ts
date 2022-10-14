@@ -12,7 +12,6 @@ import { GroupsMessages } from "./model/groupmessages.entity";
 import { ChatService } from "./chat/chat.service";
 import { ChatModule } from "./chat/chat.module";
 import { Group_User } from "./model/group_user.entity";
-import { UserToUserMessage } from "./model/user_user_message.entity";
 
 @Module({
   imports: [
@@ -29,7 +28,6 @@ import { UserToUserMessage } from "./model/user_user_message.entity";
         groups,
         GroupsMessages,
         Group_User,
-        UserToUserMessage,
       ],
       synchronize: true,
       autoLoadEntities: true,

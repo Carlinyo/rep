@@ -166,7 +166,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __webpack_require__(4);
 const app_module_1 = __webpack_require__(5);
 async function bootstrap() {
-    const cors = __webpack_require__(28);
+    const cors = __webpack_require__(27);
     const app = await core_1.NestFactory.create(app_module_1.AppModule, {
         rawBody: true,
         cors: true
@@ -209,14 +209,13 @@ const app_service_1 = __webpack_require__(16);
 const messages_entity_1 = __webpack_require__(14);
 const user_entity_1 = __webpack_require__(13);
 const register_module_1 = __webpack_require__(17);
-const home_controller_1 = __webpack_require__(21);
-const home_module_1 = __webpack_require__(22);
+const home_controller_1 = __webpack_require__(20);
+const home_module_1 = __webpack_require__(21);
 const groups_entity_1 = __webpack_require__(12);
 const groupmessages_entity_1 = __webpack_require__(10);
 const chat_service_1 = __webpack_require__(9);
-const chat_module_1 = __webpack_require__(24);
+const chat_module_1 = __webpack_require__(23);
 const group_user_entity_1 = __webpack_require__(15);
-const user_user_message_entity_1 = __webpack_require__(20);
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -235,7 +234,6 @@ AppModule = __decorate([
                     groups_entity_1.groups,
                     groupmessages_entity_1.GroupsMessages,
                     group_user_entity_1.Group_User,
-                    user_user_message_entity_1.UserToUserMessage,
                 ],
                 synchronize: true,
                 autoLoadEntities: true,
@@ -666,12 +664,11 @@ const typeorm_1 = __webpack_require__(7);
 const groups_entity_1 = __webpack_require__(12);
 const group_user_entity_1 = __webpack_require__(15);
 const groupmessages_entity_1 = __webpack_require__(10);
-const user_user_message_entity_1 = __webpack_require__(20);
 let RegisterModule = class RegisterModule {
 };
 RegisterModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, groups_entity_1.groups, group_user_entity_1.Group_User, groupmessages_entity_1.GroupsMessages, user_user_message_entity_1.UserToUserMessage])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, groups_entity_1.groups, group_user_entity_1.Group_User, groupmessages_entity_1.GroupsMessages])],
         providers: [register_service_1.RegisterService],
         controllers: [register_controller_1.RegisterController],
         exports: [typeorm_1.TypeOrmModule],
@@ -767,48 +764,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserToUserMessage = void 0;
-const typeorm_1 = __webpack_require__(11);
-const user_entity_1 = __webpack_require__(13);
-let UserToUserMessage = class UserToUserMessage {
-};
-__decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)(),
-    __metadata("design:type", Number)
-], UserToUserMessage.prototype, "id", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user),
-    (0, typeorm_1.JoinColumn)(),
-    __metadata("design:type", typeof (_a = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _a : Object)
-], UserToUserMessage.prototype, "from", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user),
-    (0, typeorm_1.JoinColumn)(),
-    __metadata("design:type", typeof (_b = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _b : Object)
-], UserToUserMessage.prototype, "to", void 0);
-UserToUserMessage = __decorate([
-    (0, typeorm_1.Entity)()
-], UserToUserMessage);
-exports.UserToUserMessage = UserToUserMessage;
-
-
-/***/ }),
-/* 21 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HomeController = void 0;
 const common_1 = __webpack_require__(6);
@@ -830,7 +785,7 @@ exports.HomeController = HomeController;
 
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -844,7 +799,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HomeModule = void 0;
 const common_1 = __webpack_require__(6);
-const home_service_1 = __webpack_require__(23);
+const home_service_1 = __webpack_require__(22);
 let HomeModule = class HomeModule {
 };
 HomeModule = __decorate([
@@ -856,7 +811,7 @@ exports.HomeModule = HomeModule;
 
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -879,7 +834,7 @@ exports.HomeService = HomeService;
 
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -899,7 +854,7 @@ const groups_entity_1 = __webpack_require__(12);
 const group_user_entity_1 = __webpack_require__(15);
 const messages_entity_1 = __webpack_require__(14);
 const user_entity_1 = __webpack_require__(13);
-const chat_gateway_1 = __webpack_require__(25);
+const chat_gateway_1 = __webpack_require__(24);
 const chat_service_1 = __webpack_require__(9);
 let ChatModule = class ChatModule {
 };
@@ -913,7 +868,7 @@ exports.ChatModule = ChatModule;
 
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -933,9 +888,9 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatGateway = void 0;
-const websockets_1 = __webpack_require__(26);
+const websockets_1 = __webpack_require__(25);
 const chat_service_1 = __webpack_require__(9);
-const socket_io_1 = __webpack_require__(27);
+const socket_io_1 = __webpack_require__(26);
 const typeorm_1 = __webpack_require__(7);
 const group_user_entity_1 = __webpack_require__(15);
 const typeorm_2 = __webpack_require__(11);
@@ -956,9 +911,9 @@ let ChatGateway = class ChatGateway {
         socket.emit("getGroups", groups);
     }
     async getGroupMessage(socket, message) {
+        console.log(message);
         let data;
         if (!message.status) {
-            console.log(message);
             await this.chatService.sendGroupMessage(message);
             data = await this.chatService.GetGroupData(message.group);
         }
@@ -980,13 +935,9 @@ let ChatGateway = class ChatGateway {
             socket.broadcast.emit("typing", { from: data.userId, status: "false" });
         }
     }
-    async getJoinedUser(socket, data) {
-        let user = await this.chatService.getUser(data.user);
-        data.from = data.user;
-        delete data.user;
-        data.message = { message: user[0].username + " is joined" };
-        data.message.date = new Date().getHours() + ":" + new Date().getMinutes();
-        console.log(data);
+    async joinedUsername(socket, username) {
+        let date = new Date().getHours() + new Date().getMinutes();
+        let message = { message: username + " is joined", date: date };
     }
 };
 __decorate([
@@ -1024,11 +975,11 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "onInput", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)("joinedUser"),
+    (0, websockets_1.SubscribeMessage)("user"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_j = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _j : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_j = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _j : Object, String]),
     __metadata("design:returntype", Promise)
-], ChatGateway.prototype, "getJoinedUser", null);
+], ChatGateway.prototype, "joinedUsername", null);
 ChatGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({ cors: "*:*", transport: ["websocket"] }),
     __param(1, (0, typeorm_1.InjectRepository)(group_user_entity_1.Group_User)),
@@ -1038,21 +989,21 @@ exports.ChatGateway = ChatGateway;
 
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("socket.io");
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ ((module) => {
 
 "use strict";
@@ -1120,7 +1071,7 @@ module.exports = require("cors");
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("90f8a42fa392951220bf")
+/******/ 		__webpack_require__.h = () => ("a88b380e787d727d65d6")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */

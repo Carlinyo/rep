@@ -77,7 +77,6 @@ export class ChatService {
   async getUser(id: string) {
     return await this.users.find({ where: { id: id } });
   }
-
   async leaveGroup(id: UserDto) {
     let user: User = await this.users.findOneBy(id);
     await this.users.delete(user);
