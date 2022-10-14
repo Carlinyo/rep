@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import {
-  useAppDispatch,
-  useAppSelector,
-} from "../../utils/helpers";
+import { useAppDispatch, useAppSelector } from "../../utils/helpers";
 import GroupChatStyles from "./style.module.css";
 import io from "socket.io-client";
 
@@ -17,7 +14,6 @@ const GroupChatComponent = () => {
   const [active, setActive] = useState(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const socket = io("http://localhost:5001");
-  const [joinedUser, setJoinedUser] = useState<string>("");
   const {
     register,
     handleSubmit,
@@ -28,12 +24,16 @@ const GroupChatComponent = () => {
   const { groupData } = useAppSelector((state) => state.ChatR);
   const dispatch = useAppDispatch();
   const [isConnected, setIsConnected] = useState(socket.connected);
+  const [joinedUser, setJoinedUser] = useState<string>("");
   useEffect(() => {
     socket.on("connect", () => {
-      socket.emit("joinedUser", {user:localStorage.getItem("userId"),group:id});
-      socket.emit("message", id);
       setIsConnected(true);
+      socket.emit("message", id);
       socket.emit("groupMessage", { id, status: 100 });
+      socket.emit("user", localStorage.getItem("username"));
+    });
+    socket.on("username", (data) => {
+      setJoinedUser(data);
     });
     socket.on("typing", (data) => {
       if (
@@ -46,9 +46,11 @@ const GroupChatComponent = () => {
       }
     });
     socket.on("groupData", (data) => {
-      console.log(data);
       dispatch(getGroupData(data));
     });
+    socket.on('joinedUser',(data)=>{
+      
+    })
     socket.on("disconnect", () => {
       setIsConnected(false);
     });
@@ -65,36 +67,46 @@ const GroupChatComponent = () => {
       <div className={GroupChatStyles.container}>
         <div className={GroupChatStyles.chat}>
           <div className={GroupChatStyles.title}></div>
-          {groupData?.messages?.map((message: GroupMessages, index: number) => {
-            let Message: any = message.message;
-            let user: any = message.from;
-            return (
-              <div key={index} className={GroupChatStyles.messagesContainer}>
-                <div className={GroupChatStyles.leftMessages}>
-                  {message?.from?.id + "" !==
-                    localStorage.getItem("userId") && (
-                    <LeftMessages
-                      key={index}
-                      message={Message.message}
-                      date={Message.date}
-                      user={user.username}
-                    />
-                  )}
-                </div>
-                <div className={GroupChatStyles.rightMessages}>
-                  {message?.from?.id + "" ===
-                    localStorage.getItem("userId") && (
-                    <RightMessages
-                      key={index}
-                      message={Message.message}
-                      date={Message.date}
-                      user={user.username}
-                    />
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          <div className={GroupChatStyles.messagesBody}>
+            {localStorage.getItem("count") === "0" && (
+              <p>{joinedUser}</p>
+            )}
+            {groupData?.messages?.map(
+              (message: GroupMessages, index: number) => {
+                let Message: any = message.message;
+                let user: any = message.from;
+                return (
+                  <div
+                    key={index}
+                    className={GroupChatStyles.messagesContainer}
+                  >
+                    <div className={GroupChatStyles.leftMessages}>
+                      {message?.from?.id + "" !==
+                        localStorage.getItem("userId") && (
+                        <LeftMessages
+                          key={index}
+                          message={Message.message}
+                          date={Message.date}
+                          user={user.username}
+                        />
+                      )}
+                    </div>
+                    <div className={GroupChatStyles.rightMessages}>
+                      {message?.from?.id + "" ===
+                        localStorage.getItem("userId") && (
+                        <RightMessages
+                          key={index}
+                          message={Message.message}
+                          date={Message.date}
+                          user={user.username}
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+            )}
+          </div>
           {active && (
             <div>
               {groupData?.users?.map((user: User, index: number) => {

@@ -22,6 +22,7 @@ const JoinComponent = () => {
   const [isConnected, setIsConnected] = useState(socket.connected);
   const dispatch = useAppDispatch();
   useEffect(() => {
+    localStorage.setItem('count','0')
     socket.on("connect", () => {
       socket.emit("getGroups");
       socket.emit("getUsers");
@@ -53,7 +54,9 @@ const JoinComponent = () => {
           socket.emit("join", data);
           socket.on("status", (data) => {
             if (data.status === "Ok") {
+              localStorage.count = '0';
               localStorage.userId = data.user?.id;
+              localStorage.username = data.user?.username;
               navigate(`/group/${data.user.group}`);
             }
           });

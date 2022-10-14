@@ -32,14 +32,6 @@
   right: 0;
 }
 
-.formParent {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
 .send_form {
   position: sticky;
   bottom: 0;
@@ -79,6 +71,11 @@
 .messagesContainer {
     padding-top: 7px;
 }
+
+.messagesBody{
+  height: 90%;
+}
+
 .chat_bubble {
   background-color:#E6F8F1;
   padding:16px 28px;

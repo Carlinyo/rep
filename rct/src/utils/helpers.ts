@@ -28,3 +28,8 @@ export function useOnClickOutside(ref: any, handler: any) {
     };
   }, [ref, handler]);
 }
+
+export function isJoinedH() {
+  localStorage.count = "1";
+  return localStorage.getItem("username") + " is joined";
+}
