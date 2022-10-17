@@ -12,6 +12,7 @@ import { GroupsMessages } from "./model/groupmessages.entity";
 import { ChatService } from "./chat/chat.service";
 import { ChatModule } from "./chat/chat.module";
 import { Group_User } from "./model/group_user.entity";
+import { JoinedUserMessage } from "./model/joined-user-emtity";
 
 @Module({
   imports: [
@@ -28,13 +29,14 @@ import { Group_User } from "./model/group_user.entity";
         groups,
         GroupsMessages,
         Group_User,
+        JoinedUserMessage
       ],
       synchronize: true,
       autoLoadEntities: true,
     }),
     RegisterModule,
     HomeModule,
-    TypeOrmModule.forFeature([Messages, GroupsMessages]),
+    TypeOrmModule.forFeature([Messages, GroupsMessages,JoinedUserMessage]),
     ChatModule,
   ],
   controllers: [AppController, HomeController],

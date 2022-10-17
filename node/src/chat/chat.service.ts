@@ -3,11 +3,13 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { GroupDto } from "src/dto/group.dto";
 import { GroupMessagesI } from "src/dto/groupmessage.dto";
 import { Group_UserDto } from "src/dto/group_user.dto";
+import { JoinedUserMessagesDto } from "src/dto/joined-user-messages.dto";
 import { MessageDto } from "src/dto/message.dto";
 import { UserDto } from "src/dto/user.dto";
 import { GroupsMessages } from "src/model/groupmessages.entity";
 import { groups } from "src/model/groups.entity";
 import { Group_User } from "src/model/group_user.entity";
+import { JoinedUserMessage } from "src/model/joined-user-emtity";
 import { Messages } from "src/model/messages.entity";
 import { User } from "src/model/user.entity";
 import { FindManyOptions, Repository } from "typeorm";
@@ -39,6 +41,11 @@ export class ChatService {
     private Groups:
       | Repository<RawBodyRequest<GroupDto>>
       | FindManyOptions<RawBodyRequest<MessageDto>>
+      | any,
+    @InjectRepository(JoinedUserMessage)
+    private joinedUserMessages:
+      | Repository<RawBodyRequest<JoinedUserMessagesDto>>
+      | FindManyOptions<RawBodyRequest<JoinedUserMessagesDto>>
       | any
   ) {}
 
@@ -100,5 +107,16 @@ export class ChatService {
     return await this.group_user.find({
       relations: ["user", "group"],
     });
+  }
+  async sendJoinedUserMessages(message: JoinedUserMessagesDto) {
+    console.log(message)
+    let Message = await this.joinedUserMessages.save(message);
+    setTimeout(async () => {
+      await this.joinedUserMessages.delete(Message);
+    }, 15000);
+    return Message
+  }
+  async getJoinedMessages(){
+    return await this.joinedUserMessages.find()
   }
 }

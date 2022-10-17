@@ -11,6 +11,8 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Group_User } from "src/model/group_user.entity";
 import { Group_UserDto } from "src/dto/group_user.dto";
 import { Repository } from "typeorm";
+import { JoinedUserMessage } from "src/model/joined-user-emtity";
+import { JoinedUserMessagesDto } from "src/dto/joined-user-messages.dto";
 
 @WebSocketGateway({ cors: "*:*", transport: ["websocket"] })
 export class ChatGateway implements NestGateway {
@@ -38,7 +40,6 @@ export class ChatGateway implements NestGateway {
   }
   @SubscribeMessage("groupMessage")
   async getGroupMessage(socket: Socket, message: any) {
-    console.log(message);
     let data;
     if (!message.status) {
       await this.chatService.sendGroupMessage(message);
@@ -63,8 +64,18 @@ export class ChatGateway implements NestGateway {
     }
   }
   @SubscribeMessage("user")
-  async joinedUsername(socket: Socket, username: string) {
-    let date = new Date().getHours() + new Date().getMinutes();
-    let message = { message: username + " is joined", date: date };
+  async joinedUsername(socket: Socket, data: JoinedUserMessagesDto) {
+    let date = new Date().getHours() + ":" + new Date().getMinutes();
+    data.date = date;
+    if (data.count === "0") {
+      delete data.count;
+      let Message = await this.chatService.sendJoinedUserMessages(data);
+      let messages = await this.chatService.getJoinedMessages();
+      socket.emit("joinedUser", { message: Message, messages });
+      socket.broadcast.emit("joinedUser", { message: Message, messages });
+    } else {
+      socket.emit("joinedUser", "");
+      socket.broadcast.emit("joinedUser", "");
+    }
   }
 }
