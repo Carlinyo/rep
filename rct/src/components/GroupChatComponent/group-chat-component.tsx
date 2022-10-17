@@ -24,16 +24,24 @@ const GroupChatComponent = () => {
   const { groupData } = useAppSelector((state) => state.ChatR);
   const dispatch = useAppDispatch();
   const [isConnected, setIsConnected] = useState(socket.connected);
-  const [joinedUser, setJoinedUser] = useState<string>("");
+  const [joinedUsers, setJoinedUsers] = useState<JoinedUserMessage[]>([]);
+  const [joinedUser, setJoinedUser] = useState<JoinedUserMessage>({
+    user: "",
+    date: "",
+    message: "",
+    group: "",
+  });
   useEffect(() => {
     socket.on("connect", () => {
       setIsConnected(true);
       socket.emit("message", id);
       socket.emit("groupMessage", { id, status: 100 });
-      socket.emit("user", localStorage.getItem("username"));
-    });
-    socket.on("username", (data) => {
-      setJoinedUser(data);
+      socket.emit("user", {
+        message: localStorage.getItem("username") + " is joined",
+        user: localStorage.getItem("userId"),
+        group: id,
+        count: localStorage.getItem("count"),
+      });
     });
     socket.on("typing", (data) => {
       if (
@@ -48,9 +56,15 @@ const GroupChatComponent = () => {
     socket.on("groupData", (data) => {
       dispatch(getGroupData(data));
     });
-    socket.on('joinedUser',(data)=>{
-      
-    })
+    socket.on("joinedUser", (data) => {
+      if (data) {
+        setJoinedUsers(data.messages);
+        setJoinedUser(data.Message);
+        localStorage.setItem("count", "1");
+      } else {
+
+      }
+    });
     socket.on("disconnect", () => {
       setIsConnected(false);
     });
@@ -68,9 +82,14 @@ const GroupChatComponent = () => {
         <div className={GroupChatStyles.chat}>
           <div className={GroupChatStyles.title}></div>
           <div className={GroupChatStyles.messagesBody}>
-            {localStorage.getItem("count") === "0" && (
-              <p>{joinedUser}</p>
-            )}
+            {joinedUsers.map((user: JoinedUserMessage, index: number) => {
+              return (
+                <div key={index}>
+                  <p>{user.message}</p>
+                  <p>{user.date}</p>
+                </div>
+              );
+            })}
             {groupData?.messages?.map(
               (message: GroupMessages, index: number) => {
                 let Message: any = message.message;
