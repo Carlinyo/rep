@@ -1,6 +1,6 @@
 export declare class GroupMessagesI {
     id: number;
-    fromId: number;
-    groupId: number;
+    from: number;
+    group: number;
     message: string;
 }

@@ -4,7 +4,6 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { Messages } from "./model/messages.entity";
 import { User } from "./model/user.entity";
-import { RegisterModule } from "./register/register.module";
 import { HomeController } from "./home/home.controller";
 import { HomeModule } from "./home/home.module";
 import { groups } from "./model/groups.entity";
@@ -13,6 +12,7 @@ import { ChatService } from "./chat/chat.service";
 import { ChatModule } from "./chat/chat.module";
 import { Group_User } from "./model/group_user.entity";
 import { JoinedUserMessage } from "./model/joined-user-emtity";
+import { LeftUsers } from "./model/letf-users.entity";
 
 @Module({
   imports: [
@@ -29,14 +29,22 @@ import { JoinedUserMessage } from "./model/joined-user-emtity";
         groups,
         GroupsMessages,
         Group_User,
-        JoinedUserMessage
+        JoinedUserMessage,
+        LeftUsers
       ],
       synchronize: true,
       autoLoadEntities: true,
     }),
-    RegisterModule,
     HomeModule,
-    TypeOrmModule.forFeature([Messages, GroupsMessages,JoinedUserMessage]),
+    TypeOrmModule.forFeature([
+      Messages,
+      GroupsMessages,
+      JoinedUserMessage,
+      User,
+      groups,
+      Group_User,
+      LeftUsers
+    ]),
     ChatModule,
   ],
   controllers: [AppController, HomeController],

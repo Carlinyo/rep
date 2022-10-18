@@ -18,4 +18,6 @@ export class User {
   @ManyToOne(() => groups, (group: groups) => group)
   @JoinColumn()
   group: groups;
+  @Column({default:0})
+  type:number
 }

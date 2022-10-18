@@ -10,6 +10,7 @@ import { GroupsMessages } from "src/model/groupmessages.entity";
 import { groups } from "src/model/groups.entity";
 import { Group_User } from "src/model/group_user.entity";
 import { JoinedUserMessage } from "src/model/joined-user-emtity";
+import { LeftUsers } from "src/model/letf-users.entity";
 import { Messages } from "src/model/messages.entity";
 import { User } from "src/model/user.entity";
 import { FindManyOptions, Repository } from "typeorm";
@@ -46,6 +47,11 @@ export class ChatService {
     private joinedUserMessages:
       | Repository<RawBodyRequest<JoinedUserMessagesDto>>
       | FindManyOptions<RawBodyRequest<JoinedUserMessagesDto>>
+      | any,
+    @InjectRepository(LeftUsers)
+    private LeftUsersMessage:
+      | Repository<RawBodyRequest<JoinedUserMessagesDto>>
+      | FindManyOptions<RawBodyRequest<JoinedUserMessagesDto>>
       | any
   ) {}
 
@@ -56,6 +62,12 @@ export class ChatService {
       from: body.from,
       group: body.group,
     });
+  }
+  async LogoutUser(id: string) {
+    let groupUser = await this.group_user.findOne({ where: { user: +id } });
+    if (groupUser) {
+      await this.group_user.delete(groupUser);
+    }
   }
   async JoinToGroup(user: RawBodyRequest<UserDto>) {
     let group = await this.users.find({
@@ -96,9 +108,8 @@ export class ChatService {
     let groupUsers = groupMessages
       .filter((el: Group_UserDto) => el.group.id === +id)
       .sort((a: GroupMessagesI, b: GroupMessagesI) => b.id > a.id);
-    let users = await this.users.find({ relations: ["group"] }),
-      Users = users.filter((el: UserDto) => el.group.id === +id);
-    return { messages: groupUsers, users: Users };
+    let users = await this.users.find({ where: { group: +id } });
+    return { messages: groupUsers, users: users };
   }
   async getGroups() {
     return await this.Groups.find();
@@ -109,14 +120,23 @@ export class ChatService {
     });
   }
   async sendJoinedUserMessages(message: JoinedUserMessagesDto) {
-    console.log(message)
     let Message = await this.joinedUserMessages.save(message);
     setTimeout(async () => {
       await this.joinedUserMessages.delete(Message);
     }, 15000);
-    return Message
+    return Message;
   }
-  async getJoinedMessages(){
-    return await this.joinedUserMessages.find()
+  async getJoinedMessages() {
+    return await this.joinedUserMessages.find();
+  }
+  async sendLeftUserMessage(data: any) {
+    let message = await this.LeftUsersMessage.save(data);
+    setTimeout(async () => {
+      await this.LeftUsersMessage.delete(message);
+    }, 15000);
+    return message;
+  }
+  async getLeftMessages(){
+    return await this.LeftUsersMessage.find()
   }
 }

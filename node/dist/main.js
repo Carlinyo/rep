@@ -166,7 +166,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __webpack_require__(4);
 const app_module_1 = __webpack_require__(5);
 async function bootstrap() {
-    const cors = __webpack_require__(29);
+    const cors = __webpack_require__(27);
     const app = await core_1.NestFactory.create(app_module_1.AppModule, {
         rawBody: true,
         cors: true
@@ -205,18 +205,18 @@ exports.AppModule = void 0;
 const common_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(7);
 const app_controller_1 = __webpack_require__(8);
-const app_service_1 = __webpack_require__(17);
+const app_service_1 = __webpack_require__(18);
 const messages_entity_1 = __webpack_require__(14);
 const user_entity_1 = __webpack_require__(13);
-const register_module_1 = __webpack_require__(18);
-const home_controller_1 = __webpack_require__(21);
-const home_module_1 = __webpack_require__(22);
+const home_controller_1 = __webpack_require__(19);
+const home_module_1 = __webpack_require__(20);
 const groups_entity_1 = __webpack_require__(12);
 const groupmessages_entity_1 = __webpack_require__(10);
 const chat_service_1 = __webpack_require__(9);
-const chat_module_1 = __webpack_require__(24);
+const chat_module_1 = __webpack_require__(22);
 const group_user_entity_1 = __webpack_require__(15);
 const joined_user_emtity_1 = __webpack_require__(16);
+const letf_users_entity_1 = __webpack_require__(17);
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -235,14 +235,22 @@ AppModule = __decorate([
                     groups_entity_1.groups,
                     groupmessages_entity_1.GroupsMessages,
                     group_user_entity_1.Group_User,
-                    joined_user_emtity_1.JoinedUserMessage
+                    joined_user_emtity_1.JoinedUserMessage,
+                    letf_users_entity_1.LeftUsers
                 ],
                 synchronize: true,
                 autoLoadEntities: true,
             }),
-            register_module_1.RegisterModule,
             home_module_1.HomeModule,
-            typeorm_1.TypeOrmModule.forFeature([messages_entity_1.Messages, groupmessages_entity_1.GroupsMessages, joined_user_emtity_1.JoinedUserMessage]),
+            typeorm_1.TypeOrmModule.forFeature([
+                messages_entity_1.Messages,
+                groupmessages_entity_1.GroupsMessages,
+                joined_user_emtity_1.JoinedUserMessage,
+                user_entity_1.User,
+                groups_entity_1.groups,
+                group_user_entity_1.Group_User,
+                letf_users_entity_1.LeftUsers
+            ]),
             chat_module_1.ChatModule,
         ],
         controllers: [app_controller_1.AppController, home_controller_1.HomeController],
@@ -317,7 +325,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatService = void 0;
 const common_1 = __webpack_require__(6);
@@ -326,16 +334,18 @@ const groupmessages_entity_1 = __webpack_require__(10);
 const groups_entity_1 = __webpack_require__(12);
 const group_user_entity_1 = __webpack_require__(15);
 const joined_user_emtity_1 = __webpack_require__(16);
+const letf_users_entity_1 = __webpack_require__(17);
 const messages_entity_1 = __webpack_require__(14);
 const user_entity_1 = __webpack_require__(13);
 let ChatService = class ChatService {
-    constructor(users, group_user, gMessages, messages, Groups, joinedUserMessages) {
+    constructor(users, group_user, gMessages, messages, Groups, joinedUserMessages, LeftUsersMessage) {
         this.users = users;
         this.group_user = group_user;
         this.gMessages = gMessages;
         this.messages = messages;
         this.Groups = Groups;
         this.joinedUserMessages = joinedUserMessages;
+        this.LeftUsersMessage = LeftUsersMessage;
     }
     async sendGroupMessage(body) {
         let Message = await this.messages.save(body.message);
@@ -344,6 +354,12 @@ let ChatService = class ChatService {
             from: body.from,
             group: body.group,
         });
+    }
+    async LogoutUser(id) {
+        let groupUser = await this.group_user.findOne({ where: { user: +id } });
+        if (groupUser) {
+            await this.group_user.delete(groupUser);
+        }
     }
     async JoinToGroup(user) {
         let group = await this.users.find({
@@ -382,8 +398,8 @@ let ChatService = class ChatService {
         let groupUsers = groupMessages
             .filter((el) => el.group.id === +id)
             .sort((a, b) => b.id > a.id);
-        let users = await this.users.find({ relations: ["group"] }), Users = users.filter((el) => el.group.id === +id);
-        return { messages: groupUsers, users: Users };
+        let users = await this.users.find({ where: { group: +id } });
+        return { messages: groupUsers, users: users };
     }
     async getGroups() {
         return await this.Groups.find();
@@ -394,7 +410,6 @@ let ChatService = class ChatService {
         });
     }
     async sendJoinedUserMessages(message) {
-        console.log(message);
         let Message = await this.joinedUserMessages.save(message);
         setTimeout(async () => {
             await this.joinedUserMessages.delete(Message);
@@ -403,6 +418,16 @@ let ChatService = class ChatService {
     }
     async getJoinedMessages() {
         return await this.joinedUserMessages.find();
+    }
+    async sendLeftUserMessage(data) {
+        let message = await this.LeftUsersMessage.save(data);
+        setTimeout(async () => {
+            await this.LeftUsersMessage.delete(message);
+        }, 15000);
+        return message;
+    }
+    async getLeftMessages() {
+        return await this.LeftUsersMessage.find();
     }
 };
 ChatService = __decorate([
@@ -413,7 +438,8 @@ ChatService = __decorate([
     __param(3, (0, typeorm_1.InjectRepository)(messages_entity_1.Messages)),
     __param(4, (0, typeorm_1.InjectRepository)(groups_entity_1.groups)),
     __param(5, (0, typeorm_1.InjectRepository)(joined_user_emtity_1.JoinedUserMessage)),
-    __metadata("design:paramtypes", [Object, Object, Object, Object, Object, Object])
+    __param(6, (0, typeorm_1.InjectRepository)(letf_users_entity_1.LeftUsers)),
+    __metadata("design:paramtypes", [Object, Object, Object, Object, Object, Object, Object])
 ], ChatService);
 exports.ChatService = ChatService;
 
@@ -549,6 +575,10 @@ __decorate([
     (0, typeorm_1.JoinColumn)(),
     __metadata("design:type", typeof (_a = typeof groups_entity_1.groups !== "undefined" && groups_entity_1.groups) === "function" ? _a : Object)
 ], User.prototype, "group", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 0 }),
+    __metadata("design:type", Number)
+], User.prototype, "type", void 0);
 User = __decorate([
     (0, typeorm_1.Entity)()
 ], User);
@@ -698,15 +728,42 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AppService = void 0;
-const common_1 = __webpack_require__(6);
-let AppService = class AppService {
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-AppService = __decorate([
-    (0, common_1.Injectable)()
-], AppService);
-exports.AppService = AppService;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LeftUsers = void 0;
+const typeorm_1 = __webpack_require__(11);
+const groups_entity_1 = __webpack_require__(12);
+const user_entity_1 = __webpack_require__(13);
+let LeftUsers = class LeftUsers {
+};
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
+], LeftUsers.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user),
+    (0, typeorm_1.JoinColumn)(),
+    __metadata("design:type", Number)
+], LeftUsers.prototype, "user", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => groups_entity_1.groups, (group) => group),
+    (0, typeorm_1.JoinColumn)(),
+    __metadata("design:type", Number)
+], LeftUsers.prototype, "group", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], LeftUsers.prototype, "date", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], LeftUsers.prototype, "message", void 0);
+LeftUsers = __decorate([
+    (0, typeorm_1.Entity)()
+], LeftUsers);
+exports.LeftUsers = LeftUsers;
 
 
 /***/ }),
@@ -722,102 +779,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.RegisterModule = void 0;
+exports.AppService = void 0;
 const common_1 = __webpack_require__(6);
-const user_entity_1 = __webpack_require__(13);
-const register_controller_1 = __webpack_require__(19);
-const register_service_1 = __webpack_require__(20);
-const typeorm_1 = __webpack_require__(7);
-const groups_entity_1 = __webpack_require__(12);
-const group_user_entity_1 = __webpack_require__(15);
-const groupmessages_entity_1 = __webpack_require__(10);
-let RegisterModule = class RegisterModule {
+let AppService = class AppService {
 };
-RegisterModule = __decorate([
-    (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, groups_entity_1.groups, group_user_entity_1.Group_User, groupmessages_entity_1.GroupsMessages])],
-        providers: [register_service_1.RegisterService],
-        controllers: [register_controller_1.RegisterController],
-        exports: [typeorm_1.TypeOrmModule],
-    })
-], RegisterModule);
-exports.RegisterModule = RegisterModule;
+AppService = __decorate([
+    (0, common_1.Injectable)()
+], AppService);
+exports.AppService = AppService;
 
 
 /***/ }),
 /* 19 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var _a;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.RegisterController = void 0;
-const common_1 = __webpack_require__(6);
-const register_service_1 = __webpack_require__(20);
-let RegisterController = class RegisterController {
-    constructor(regService) {
-        this.regService = regService;
-    }
-};
-RegisterController = __decorate([
-    (0, common_1.Controller)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof register_service_1.RegisterService !== "undefined" && register_service_1.RegisterService) === "function" ? _a : Object])
-], RegisterController);
-exports.RegisterController = RegisterController;
-
-
-/***/ }),
-/* 20 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b, _c, _d;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.RegisterService = void 0;
-const common_1 = __webpack_require__(6);
-const typeorm_1 = __webpack_require__(7);
-const groups_entity_1 = __webpack_require__(12);
-const group_user_entity_1 = __webpack_require__(15);
-let RegisterService = class RegisterService {
-    constructor(Groups, group_user) {
-        this.Groups = Groups;
-        this.group_user = group_user;
-    }
-};
-RegisterService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(groups_entity_1.groups)),
-    __param(1, (0, typeorm_1.InjectRepository)(group_user_entity_1.Group_User)),
-    __metadata("design:paramtypes", [Object, Object])
-], RegisterService);
-exports.RegisterService = RegisterService;
-
-
-/***/ }),
-/* 21 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -852,7 +825,7 @@ exports.HomeController = HomeController;
 
 
 /***/ }),
-/* 22 */
+/* 20 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -866,7 +839,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HomeModule = void 0;
 const common_1 = __webpack_require__(6);
-const home_service_1 = __webpack_require__(23);
+const home_service_1 = __webpack_require__(21);
 let HomeModule = class HomeModule {
 };
 HomeModule = __decorate([
@@ -878,7 +851,7 @@ exports.HomeModule = HomeModule;
 
 
 /***/ }),
-/* 23 */
+/* 21 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -901,7 +874,7 @@ exports.HomeService = HomeService;
 
 
 /***/ }),
-/* 24 */
+/* 22 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -920,15 +893,16 @@ const groupmessages_entity_1 = __webpack_require__(10);
 const groups_entity_1 = __webpack_require__(12);
 const group_user_entity_1 = __webpack_require__(15);
 const joined_user_emtity_1 = __webpack_require__(16);
+const letf_users_entity_1 = __webpack_require__(17);
 const messages_entity_1 = __webpack_require__(14);
 const user_entity_1 = __webpack_require__(13);
-const chat_gateway_1 = __webpack_require__(25);
+const chat_gateway_1 = __webpack_require__(23);
 const chat_service_1 = __webpack_require__(9);
 let ChatModule = class ChatModule {
 };
 ChatModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, groups_entity_1.groups, messages_entity_1.Messages, groupmessages_entity_1.GroupsMessages, group_user_entity_1.Group_User, joined_user_emtity_1.JoinedUserMessage])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, groups_entity_1.groups, messages_entity_1.Messages, groupmessages_entity_1.GroupsMessages, group_user_entity_1.Group_User, joined_user_emtity_1.JoinedUserMessage, letf_users_entity_1.LeftUsers])],
         providers: [chat_service_1.ChatService, chat_gateway_1.ChatGateway],
     })
 ], ChatModule);
@@ -936,7 +910,7 @@ exports.ChatModule = ChatModule;
 
 
 /***/ }),
-/* 25 */
+/* 23 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -953,16 +927,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatGateway = void 0;
-const websockets_1 = __webpack_require__(26);
+const websockets_1 = __webpack_require__(24);
 const chat_service_1 = __webpack_require__(9);
-const socket_io_1 = __webpack_require__(27);
+const socket_io_1 = __webpack_require__(25);
 const typeorm_1 = __webpack_require__(7);
 const group_user_entity_1 = __webpack_require__(15);
 const typeorm_2 = __webpack_require__(11);
-const joined_user_messages_dto_1 = __webpack_require__(28);
+const joined_user_messages_dto_1 = __webpack_require__(26);
 let ChatGateway = class ChatGateway {
     constructor(chatService, group_user) {
         this.chatService = chatService;
@@ -992,6 +966,7 @@ let ChatGateway = class ChatGateway {
         socket.broadcast.emit("groupData", data);
     }
     async joinToGroup(socket, data) {
+        console.log(data);
         let Data = await this.chatService.JoinToGroup(data);
         socket.emit("status", Data);
     }
@@ -1014,9 +989,28 @@ let ChatGateway = class ChatGateway {
             socket.broadcast.emit("joinedUser", { message: Message, messages });
         }
         else {
-            socket.emit("joinedUser", "");
-            socket.broadcast.emit("joinedUser", "");
+            let messages = await this.chatService.getJoinedMessages();
+            socket.emit("joinedUser", { messages });
+            socket.broadcast.emit("joinedUser", { messages });
         }
+    }
+    async deleteUser(socket, data) {
+        console.log(data);
+        let date = new Date().getHours() + ":" + new Date().getMinutes();
+        data.date = date;
+        await this.chatService.sendLeftUserMessage(data);
+        let messages = await this.chatService.getLeftMessages();
+        socket.emit("getLeftMessages", messages);
+        socket.broadcast.emit("getLeftMessages", messages);
+        if (data.user) {
+            await this.chatService.LogoutUser(data.user);
+        }
+    }
+    async login(socket, data) {
+        console.log(data);
+    }
+    async createUser(socket, data) {
+        console.log(data);
     }
 };
 __decorate([
@@ -1059,6 +1053,24 @@ __decorate([
     __metadata("design:paramtypes", [typeof (_j = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _j : Object, typeof (_k = typeof joined_user_messages_dto_1.JoinedUserMessagesDto !== "undefined" && joined_user_messages_dto_1.JoinedUserMessagesDto) === "function" ? _k : Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "joinedUsername", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)("logOutUser"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_l = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _l : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "deleteUser", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('login'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_m = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _m : Object, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "login", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('createUser'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_o = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _o : Object, typeof (_p = typeof Array !== "undefined" && Array) === "function" ? _p : Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "createUser", null);
 ChatGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({ cors: "*:*", transport: ["websocket"] }),
     __param(1, (0, typeorm_1.InjectRepository)(group_user_entity_1.Group_User)),
@@ -1068,21 +1080,21 @@ exports.ChatGateway = ChatGateway;
 
 
 /***/ }),
-/* 26 */
+/* 24 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
-/* 27 */
+/* 25 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("socket.io");
 
 /***/ }),
-/* 28 */
+/* 26 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -1095,7 +1107,7 @@ exports.JoinedUserMessagesDto = JoinedUserMessagesDto;
 
 
 /***/ }),
-/* 29 */
+/* 27 */
 /***/ ((module) => {
 
 "use strict";
@@ -1163,7 +1175,7 @@ module.exports = require("cors");
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("bbb33676da38b3e74f85")
+/******/ 		__webpack_require__.h = () => ("8287f06b1db4182ff1cf")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */

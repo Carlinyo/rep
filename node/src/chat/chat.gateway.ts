@@ -11,7 +11,6 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Group_User } from "src/model/group_user.entity";
 import { Group_UserDto } from "src/dto/group_user.dto";
 import { Repository } from "typeorm";
-import { JoinedUserMessage } from "src/model/joined-user-emtity";
 import { JoinedUserMessagesDto } from "src/dto/joined-user-messages.dto";
 
 @WebSocketGateway({ cors: "*:*", transport: ["websocket"] })
@@ -50,8 +49,10 @@ export class ChatGateway implements NestGateway {
     socket.emit("groupData", data);
     socket.broadcast.emit("groupData", data);
   }
+
   @SubscribeMessage("join")
   async joinToGroup(socket: Socket, data: any) {
+    console.log(data);
     let Data = await this.chatService.JoinToGroup(data);
     socket.emit("status", Data);
   }
@@ -74,8 +75,30 @@ export class ChatGateway implements NestGateway {
       socket.emit("joinedUser", { message: Message, messages });
       socket.broadcast.emit("joinedUser", { message: Message, messages });
     } else {
-      socket.emit("joinedUser", "");
-      socket.broadcast.emit("joinedUser", "");
+      let messages = await this.chatService.getJoinedMessages();
+      socket.emit("joinedUser", { messages });
+      socket.broadcast.emit("joinedUser", { messages });
     }
+  }
+  @SubscribeMessage("logOutUser")
+  async deleteUser(socket: Socket, data: any) {
+    console.log(data);
+    let date = new Date().getHours() + ":" + new Date().getMinutes();
+    data.date = date;
+    await this.chatService.sendLeftUserMessage(data);
+    let messages = await this.chatService.getLeftMessages();
+    socket.emit("getLeftMessages", messages);
+    socket.broadcast.emit("getLeftMessages", messages);
+    if (data.user) {
+      await this.chatService.LogoutUser(data.user);
+    }
+  }
+  @SubscribeMessage('login')
+  async login(socket:Socket,data:any){
+    console.log(data)
+  }
+  @SubscribeMessage('createUser')
+  async createUser(socket:Socket,data:Array<string>){
+    console.log(data)
   }
 }
