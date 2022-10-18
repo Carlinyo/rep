@@ -29,7 +29,11 @@ export function useOnClickOutside(ref: any, handler: any) {
   }, [ref, handler]);
 }
 
-export function isJoinedH() {
-  localStorage.count = "1";
-  return localStorage.getItem("username") + " is joined";
+export const hashLinkGenerator = (email:string) =>{
+  const characters:string ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = email + '?=';
+    for ( let i = 0; i < 40; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * 40));
+    }
+    return result;
 }

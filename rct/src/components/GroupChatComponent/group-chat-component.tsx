@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../utils/helpers";
 import GroupChatStyles from "./style.module.css";
 import io from "socket.io-client";
@@ -22,15 +22,11 @@ const GroupChatComponent = () => {
   } = useForm();
   const { id } = useParams();
   const { groupData } = useAppSelector((state) => state.ChatR);
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [joinedUsers, setJoinedUsers] = useState<JoinedUserMessage[]>([]);
-  const [joinedUser, setJoinedUser] = useState<JoinedUserMessage>({
-    user: "",
-    date: "",
-    message: "",
-    group: "",
-  });
+  const [leftUsers, setLeftUsers] = useState([]);
   useEffect(() => {
     socket.on("connect", () => {
       setIsConnected(true);
@@ -59,10 +55,12 @@ const GroupChatComponent = () => {
     socket.on("joinedUser", (data) => {
       if (data) {
         setJoinedUsers(data.messages);
-        setJoinedUser(data.Message);
         localStorage.setItem("count", "1");
-      } else {
-
+      }
+    });
+    socket.on("getLeftMessages", (data) => {
+      if (data) {
+        setLeftUsers(data);
       }
     });
     socket.on("disconnect", () => {
@@ -70,17 +68,31 @@ const GroupChatComponent = () => {
     });
     return () => {
       socket.off("connect");
-      socket.off("disconnect");
-      socket.off("groupData");
       socket.off("typing");
       socket.off("groupData");
+      socket.off("joinedUser");
+      socket.off('getLeftMessages')
+      socket.off("disconnect");
     };
   }, []);
   return (
     <>
       <div className={GroupChatStyles.container}>
         <div className={GroupChatStyles.chat}>
-          <div className={GroupChatStyles.title}></div>
+          <div className={GroupChatStyles.title}>
+            <button
+              onClick={() => {
+                socket.emit("logOutUser", {
+                  group: id,
+                  user: localStorage.getItem("userId"),
+                  message: localStorage.getItem("username") + " left",
+                });
+                navigate("/");
+              }}
+            >
+              Log Out
+            </button>
+          </div>
           <div className={GroupChatStyles.messagesBody}>
             {joinedUsers.map((user: JoinedUserMessage, index: number) => {
               return (
@@ -88,6 +100,16 @@ const GroupChatComponent = () => {
                   <p>{user.message}</p>
                   <p>{user.date}</p>
                 </div>
+              );
+            })}
+            {leftUsers?.map((user: JoinedUserMessage, index: number) => {
+              return (
+                <>
+                  <div key={index}>
+                    <p>{user.message}</p>
+                    <p>{user.date}</p>
+                  </div>
+                </>
               );
             })}
             {groupData?.messages?.map(
@@ -165,15 +187,25 @@ const GroupChatComponent = () => {
               placeholder="Message..."
               className="form-control"
               maxLength={255}
-              onInput={(e: any) =>
+              onInput={(e: any) => {
                 socket.emit("input", {
                   typing: e.target.value,
                   userId: localStorage.getItem("userId"),
-                })
-              }
+                });
+              }}
               {...register("message", { required: true })}
             ></textarea>
-            <button className="btn btn-success">Send</button>
+            <button
+              className="btn btn-success"
+              onClick={() =>
+                socket.emit("input", {
+                  typing: "",
+                  userId: localStorage.getItem("userId"),
+                })
+              }
+            >
+              Send
+            </button>
           </form>
         </div>
       </div>

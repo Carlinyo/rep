@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import {
-  findUsersCount,
   useAppDispatch,
   useAppSelector,
 } from "../../utils/helpers";
@@ -22,10 +21,14 @@ const JoinComponent = () => {
   const [isConnected, setIsConnected] = useState(socket.connected);
   const dispatch = useAppDispatch();
   useEffect(() => {
-    localStorage.setItem('count','0')
+    localStorage.setItem("count", "0");
     socket.on("connect", () => {
       socket.emit("getGroups");
       socket.emit("getUsers");
+      socket.emit("input", {
+        typing: "",
+        userId: localStorage.getItem("userId"),
+      });
       setIsConnected(true);
     });
     socket.on("getUsers", (users) => {
@@ -51,20 +54,12 @@ const JoinComponent = () => {
       <form
         className={JoinComponentStyles.form}
         onSubmit={handleSubmit((data: any) => {
-          socket.emit("join", data);
-          socket.on("status", (data) => {
-            if (data.status === "Ok") {
-              localStorage.count = '0';
-              localStorage.userId = data.user?.id;
-              localStorage.username = data.user?.username;
-              navigate(`/group/${data.user.group}`);
-            }
-          });
-          if (joinReqData === "Ok") {
+          if(data.username === 'root'){
+            navigate('/admin')
           }
         })}
       >
-        <div className={JoinComponentStyles.form_part1_container}>
+        {/* <div className={JoinComponentStyles.form_part1_container}>
           <label>Select Group</label>
           <select
             {...register("group", { required: true })}
@@ -88,7 +83,7 @@ const JoinComponent = () => {
             })}
           </select>
           {errors.group && <p style={{ color: "red" }}>Select Group</p>}
-        </div>
+        </div> */}
         <div>
           <label>Username</label>
           <input
@@ -100,7 +95,7 @@ const JoinComponent = () => {
             <p style={{ color: "red" }}>Username Field is empty</p>
           )}
         </div>
-        {joinReqData !== "Ok" && joinReqData !== "" && (
+        {/* {joinReqData !== "Ok" && joinReqData !== "" && (
           <p style={{ fontSize: "14px" }}>
             Name is taken. You can use{" "}
             <span>
@@ -109,10 +104,15 @@ const JoinComponent = () => {
             {""}
             username.
           </p>
-        )}
+        )} */}
         <button className="btn btn-success">Join</button>
       </form>
     </div>
   );
 };
 export default JoinComponent;
+
+
+//root (admin page)
+//invite (gmail + token)
+//open groups

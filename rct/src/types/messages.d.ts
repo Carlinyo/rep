@@ -32,5 +32,8 @@ declare global {
     message:string;
     date:string;
   }
+  interface LeftUsersMessage{
+    
+  }
 }
 export {};
