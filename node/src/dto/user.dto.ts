@@ -1,6 +1,8 @@
-import { groups } from "src/model/groups.entity";
-
 export class UserDto {
+  id?:number;
   username: string;
-  group: groups;
+  type:number
+  verification:number;
+  password:string;
+  token:string;
 }

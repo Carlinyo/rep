@@ -50,12 +50,13 @@ export class ChatGateway implements NestGateway {
     socket.broadcast.emit("groupData", data);
   }
 
-  @SubscribeMessage("join")
-  async joinToGroup(socket: Socket, data: any) {
-    console.log(data);
-    let Data = await this.chatService.JoinToGroup(data);
-    socket.emit("status", Data);
-  }
+  // @SubscribeMessage("join")
+  // async joinToGroup(socket: Socket, data: any) {
+  //   console.log(data);
+  //   let Data = await this.chatService.JoinToGroup(data);
+  //   socket.emit("status", Data);
+  // }
+
   @SubscribeMessage("input")
   async onInput(socket: Socket, data: any) {
     if (data.typing) {
@@ -82,7 +83,6 @@ export class ChatGateway implements NestGateway {
   }
   @SubscribeMessage("logOutUser")
   async deleteUser(socket: Socket, data: any) {
-    console.log(data);
     let date = new Date().getHours() + ":" + new Date().getMinutes();
     data.date = date;
     await this.chatService.sendLeftUserMessage(data);
@@ -93,12 +93,22 @@ export class ChatGateway implements NestGateway {
       await this.chatService.LogoutUser(data.user);
     }
   }
-  @SubscribeMessage('login')
-  async login(socket:Socket,data:any){
-    console.log(data)
+  @SubscribeMessage("login")
+  async login(socket: Socket, data: any) {
+    await this.chatService.findUser(data);
   }
-  @SubscribeMessage('createUser')
-  async createUser(socket:Socket,data:Array<string>){
-    console.log(data)
+  @SubscribeMessage("createUser")
+  async createUser(socket: Socket, data: any) {
+    let users = await this.chatService.getUsers();
+    if (
+      users.every((el: Group_User) => el.user.username !== data.data.to_email)
+    ) {
+      await this.chatService.createUser(data);
+    }
   }
 }
+
+//update token nor inviti jamanak (kam chtoxnel 1 ic avel invite uxarkel)
+//redirect nery
+//chateri ejy
+//chatery

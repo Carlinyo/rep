@@ -13,8 +13,8 @@ export class Group_User {
   id: number;
   @ManyToOne(() => groups, (group: groups) => group)
   @JoinColumn()
-  group: groups[];
+  group: groups;
   @ManyToOne(() => User, (user: User) => user)
   @JoinColumn()
-  user: User[];
+  user: User;
 }

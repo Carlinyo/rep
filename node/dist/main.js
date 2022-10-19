@@ -361,29 +361,6 @@ let ChatService = class ChatService {
             await this.group_user.delete(groupUser);
         }
     }
-    async JoinToGroup(user) {
-        let group = await this.users.find({
-            relations: { group: true },
-        });
-        let groupUsers = group.filter((el) => el.group.id === +user.group);
-        let contains = 0;
-        for (let i = 0; i < groupUsers.length; i++) {
-            if (groupUsers[i].username === user.username) {
-                contains = 1;
-                return {
-                    status: user.username + "_" + Math.round(Math.random() * 100),
-                };
-            }
-        }
-        if (groupUsers.length < 5 && contains === 0) {
-            let User = await this.users.save(user);
-            await this.group_user.save({
-                group: user.group,
-                user: User.id,
-            });
-            return { user: User, status: "Ok" };
-        }
-    }
     async getUser(id) {
         return await this.users.find({ where: { id: id } });
     }
@@ -428,6 +405,31 @@ let ChatService = class ChatService {
     }
     async getLeftMessages() {
         return await this.LeftUsersMessage.find();
+    }
+    async createUser(data) {
+        let user = await this.users.save({
+            username: data.data.to_email,
+            type: 0,
+            verification: 0,
+            password: "",
+            token: data.token,
+        });
+        data.data.groups.map(async (group) => {
+            await this.group_user.save({ group: group, user: user.id });
+        });
+        return user;
+    }
+    async findUser(data) {
+        console.log(data);
+        let users = await this.users.find();
+        console.log(users);
+        let user;
+        for (let i = 0; i < users.length; i++) {
+            if (users[i].token === data.token) {
+                user = users[i];
+            }
+        }
+        console.log(user);
     }
 };
 ChatService = __decorate([
@@ -555,11 +557,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.User = void 0;
 const typeorm_1 = __webpack_require__(11);
-const groups_entity_1 = __webpack_require__(12);
 let User = class User {
 };
 __decorate([
@@ -567,18 +567,25 @@ __decorate([
     __metadata("design:type", Number)
 ], User.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ default: "" }),
     __metadata("design:type", String)
 ], User.prototype, "username", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => groups_entity_1.groups, (group) => group),
-    (0, typeorm_1.JoinColumn)(),
-    __metadata("design:type", typeof (_a = typeof groups_entity_1.groups !== "undefined" && groups_entity_1.groups) === "function" ? _a : Object)
-], User.prototype, "group", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: 0 }),
     __metadata("design:type", Number)
 ], User.prototype, "type", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 0 }),
+    __metadata("design:type", Number)
+], User.prototype, "verification", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], User.prototype, "password", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: "" }),
+    __metadata("design:type", String)
+], User.prototype, "token", void 0);
 User = __decorate([
     (0, typeorm_1.Entity)()
 ], User);
@@ -638,6 +645,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Group_User = void 0;
 const typeorm_1 = __webpack_require__(11);
@@ -652,12 +660,12 @@ __decorate([
 __decorate([
     (0, typeorm_1.ManyToOne)(() => groups_entity_1.groups, (group) => group),
     (0, typeorm_1.JoinColumn)(),
-    __metadata("design:type", Array)
+    __metadata("design:type", typeof (_a = typeof groups_entity_1.groups !== "undefined" && groups_entity_1.groups) === "function" ? _a : Object)
 ], Group_User.prototype, "group", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user),
     (0, typeorm_1.JoinColumn)(),
-    __metadata("design:type", Array)
+    __metadata("design:type", typeof (_b = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _b : Object)
 ], Group_User.prototype, "user", void 0);
 Group_User = __decorate([
     (0, typeorm_1.Entity)()
@@ -927,7 +935,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatGateway = void 0;
 const websockets_1 = __webpack_require__(24);
@@ -965,11 +973,6 @@ let ChatGateway = class ChatGateway {
         socket.emit("groupData", data);
         socket.broadcast.emit("groupData", data);
     }
-    async joinToGroup(socket, data) {
-        console.log(data);
-        let Data = await this.chatService.JoinToGroup(data);
-        socket.emit("status", Data);
-    }
     async onInput(socket, data) {
         if (data.typing) {
             socket.broadcast.emit("typing", { from: data.userId, status: "true" });
@@ -995,7 +998,6 @@ let ChatGateway = class ChatGateway {
         }
     }
     async deleteUser(socket, data) {
-        console.log(data);
         let date = new Date().getHours() + ":" + new Date().getMinutes();
         data.date = date;
         await this.chatService.sendLeftUserMessage(data);
@@ -1007,10 +1009,13 @@ let ChatGateway = class ChatGateway {
         }
     }
     async login(socket, data) {
-        console.log(data);
+        await this.chatService.findUser(data);
     }
     async createUser(socket, data) {
-        console.log(data);
+        let users = await this.chatService.getUsers();
+        if (users.every((el) => el.user.username !== data.data.to_email)) {
+            await this.chatService.createUser(data);
+        }
     }
 };
 __decorate([
@@ -1036,39 +1041,33 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "getGroupMessage", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)("join"),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_g = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _g : Object, Object]),
-    __metadata("design:returntype", Promise)
-], ChatGateway.prototype, "joinToGroup", null);
-__decorate([
     (0, websockets_1.SubscribeMessage)("input"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_h = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _h : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_g = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _g : Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "onInput", null);
 __decorate([
     (0, websockets_1.SubscribeMessage)("user"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_j = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _j : Object, typeof (_k = typeof joined_user_messages_dto_1.JoinedUserMessagesDto !== "undefined" && joined_user_messages_dto_1.JoinedUserMessagesDto) === "function" ? _k : Object]),
+    __metadata("design:paramtypes", [typeof (_h = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _h : Object, typeof (_j = typeof joined_user_messages_dto_1.JoinedUserMessagesDto !== "undefined" && joined_user_messages_dto_1.JoinedUserMessagesDto) === "function" ? _j : Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "joinedUsername", null);
 __decorate([
     (0, websockets_1.SubscribeMessage)("logOutUser"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_l = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _l : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_k = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _k : Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "deleteUser", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('login'),
+    (0, websockets_1.SubscribeMessage)("login"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_m = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _m : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_l = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _l : Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "login", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('createUser'),
+    (0, websockets_1.SubscribeMessage)("createUser"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_o = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _o : Object, typeof (_p = typeof Array !== "undefined" && Array) === "function" ? _p : Object]),
+    __metadata("design:paramtypes", [typeof (_m = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _m : Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "createUser", null);
 ChatGateway = __decorate([
@@ -1175,7 +1174,7 @@ module.exports = require("cors");
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("8287f06b1db4182ff1cf")
+/******/ 		__webpack_require__.h = () => ("19bc6f899c74a08006a5")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */

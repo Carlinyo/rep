@@ -69,29 +69,29 @@ export class ChatService {
       await this.group_user.delete(groupUser);
     }
   }
-  async JoinToGroup(user: RawBodyRequest<UserDto>) {
-    let group = await this.users.find({
-      relations: { group: true },
-    });
-    let groupUsers = group.filter((el: UserDto) => el.group.id === +user.group);
-    let contains: number = 0;
-    for (let i = 0; i < groupUsers.length; i++) {
-      if (groupUsers[i].username === user.username) {
-        contains = 1;
-        return {
-          status: user.username + "_" + Math.round(Math.random() * 100),
-        };
-      }
-    }
-    if (groupUsers.length < 5 && contains === 0) {
-      let User = await this.users.save(user);
-      await this.group_user.save({
-        group: user.group,
-        user: User.id,
-      });
-      return { user: User, status: "Ok" };
-    }
-  }
+  // async JoinToGroup(user: RawBodyRequest<UserDto>) {
+  //   let group = await this.users.find({
+  //     relations: { group: true },
+  //   });
+  //   let groupUsers = group.filter((el: UserDto) => el.group.id === +user.group);
+  //   let contains: number = 0;
+  //   for (let i = 0; i < groupUsers.length; i++) {
+  //     if (groupUsers[i].username === user.username) {
+  //       contains = 1;
+  //       return {
+  //         status: user.username + "_" + Math.round(Math.random() * 100),
+  //       };
+  //     }
+  //   }
+  //   if (groupUsers.length < 5 && contains === 0) {
+  //     let User = await this.users.save(user);
+  //     await this.group_user.save({
+  //       group: user.group,
+  //       user: User.id,
+  //     });
+  //     return { user: User, status: "Ok" };
+  //   }
+  // }
 
   async getUser(id: string) {
     return await this.users.find({ where: { id: id } });
@@ -136,7 +136,37 @@ export class ChatService {
     }, 15000);
     return message;
   }
-  async getLeftMessages(){
-    return await this.LeftUsersMessage.find()
+  async getLeftMessages() {
+    return await this.LeftUsersMessage.find();
+  }
+  async createUser(data: any) {
+    let user = await this.users.save({
+      username: data.data.to_email,
+      type: 0,
+      verification: 0,
+      password: "",
+      token: data.token,
+    });
+    data.data.groups.map(async (group: string) => {
+      await this.group_user.save({ group: group, user: user.id });
+    });
+    return user;
+  }
+  async findUser(data: any) {
+    console.log(data);
+    let users = await this.users.find();
+    console.log(users);
+    let user;
+    for (let i = 0; i < users.length; i++) {
+      if(users[i].token === data.token){
+        user = users[i]
+      }
+    }
+    console.log(user);
+    // let newUser = { ...user };
+    // newUser.password = data.password;
+    // await this.users.update(user.id, newUser);
+    // console.log(user);
+    // return user;
   }
 }
