@@ -6,21 +6,21 @@ const Chats = () => {
   const socket = io("http://localhost:5001");
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected);
   useEffect(() => {
-    socket.on('connect',()=>{
-        setIsConnected(true)
-    })
-    socket.on('disconnect',()=>{
-        setIsConnected(false)
-    })
-    return ()=>{
-        socket.off('connect')
-        socket.off('disconnect')
-    }
+    socket.on("connect", () => {
+      socket.emit("getUserByToken", "");
+      setIsConnected(true);
+    });
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+    });
+    socket.on("", () => {
+      
+    });
+    return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+    };
   }, []);
-  return (
-    <div className={ChartsStyles.container}>
-        
-    </div>
-  );
+  return <div className={ChartsStyles.container}></div>;
 };
 export default Chats;

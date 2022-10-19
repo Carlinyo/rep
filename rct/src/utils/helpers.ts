@@ -29,11 +29,20 @@ export function useOnClickOutside(ref: any, handler: any) {
   }, [ref, handler]);
 }
 
-export const hashLinkGenerator = (email:string) =>{
+export const gmailHashLinkGenerator = (email:string) =>{
   const characters:string ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let result = email + '?=';
-    for ( let i = 0; i < 40; i++ ) {
-        result += characters.charAt(Math.floor(Math.random() * 40));
+  let result = 'http://localhost:3000/login/' + email + '?token=';
+    for ( let i = 0; i < 20; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * 60));
+    }
+    return result;
+}
+
+export const hashLinkGenerator = () =>{
+  const characters:string ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+    for ( let i = 0; i < 20; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * 60));
     }
     return result;
 }

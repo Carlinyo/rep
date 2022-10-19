@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 import { getGroups, getUsers } from "../../store/reducers/chatReducer";
 import {
   findUsersCount,
+  gmailHashLinkGenerator,
   hashLinkGenerator,
   useAppDispatch,
   useAppSelector,
@@ -48,8 +49,10 @@ const AdminComponent = () => {
       <form
         className="w-25 p-3 border"
         onSubmit={handleSubmit((data) => {
-            socket.emit('createUser',data.groups)
-          data.link = hashLinkGenerator(data.to_email);
+          let token = hashLinkGenerator();
+          data.link =
+            "http://localhost:3000/login/" + data.to_email + "?token=" + token;
+          socket.emit("createUser", { data, token });
           emailjs
             .send(
               "service_stbrhtp",
