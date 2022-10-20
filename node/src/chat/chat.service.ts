@@ -14,6 +14,7 @@ import { LeftUsers } from "src/model/letf-users.entity";
 import { Messages } from "src/model/messages.entity";
 import { User } from "src/model/user.entity";
 import { FindManyOptions, Repository } from "typeorm";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class ChatService {
@@ -43,16 +44,16 @@ export class ChatService {
       | Repository<RawBodyRequest<GroupDto>>
       | FindManyOptions<RawBodyRequest<MessageDto>>
       | any,
-    @InjectRepository(JoinedUserMessage)
-    private joinedUserMessages:
-      | Repository<RawBodyRequest<JoinedUserMessagesDto>>
-      | FindManyOptions<RawBodyRequest<JoinedUserMessagesDto>>
-      | any,
-    @InjectRepository(LeftUsers)
-    private LeftUsersMessage:
-      | Repository<RawBodyRequest<JoinedUserMessagesDto>>
-      | FindManyOptions<RawBodyRequest<JoinedUserMessagesDto>>
-      | any
+    // @InjectRepository(JoinedUserMessage)
+    // private joinedUserMessages:
+    //   | Repository<RawBodyRequest<JoinedUserMessagesDto>>
+    //   | FindManyOptions<RawBodyRequest<JoinedUserMessagesDto>>
+    //   | any,
+    // @InjectRepository(LeftUsers)
+    // private LeftUsersMessage:
+    //   | Repository<RawBodyRequest<JoinedUserMessagesDto>>
+    //   | FindManyOptions<RawBodyRequest<JoinedUserMessagesDto>>
+    //   | any
   ) {}
 
   async sendGroupMessage(body: sendMessageTypes) {
@@ -63,12 +64,12 @@ export class ChatService {
       group: body.group,
     });
   }
-  async LogoutUser(id: string) {
-    let groupUser = await this.group_user.findOne({ where: { user: +id } });
-    if (groupUser) {
-      await this.group_user.delete(groupUser);
-    }
-  }
+  // async LogoutUser(id: string) {
+  //   let groupUser = await this.group_user.findOne({ where: { user: +id } });
+  //   if (groupUser) {
+  //     await this.group_user.delete(groupUser);
+  //   }
+  // }
   // async JoinToGroup(user: RawBodyRequest<UserDto>) {
   //   let group = await this.users.find({
   //     relations: { group: true },
@@ -104,12 +105,12 @@ export class ChatService {
   async GetGroupData(id: string) {
     let groupMessages = await this.gMessages.find({
       relations: { group: true, from: true, message: true },
-    });
+    })
     let groupUsers = groupMessages
       .filter((el: Group_UserDto) => el.group.id === +id)
-      .sort((a: GroupMessagesI, b: GroupMessagesI) => b.id > a.id);
-    let users = await this.users.find({ where: { group: +id } });
-    return { messages: groupUsers, users: users };
+      .sort((a: GroupMessagesI, b: GroupMessagesI) => b.id > a.id)
+    let users = await this.group_user.find({ where: { group: +id },relations:['user', 'group'] })
+    return { messages: groupUsers, users: users }
   }
   async getGroups() {
     return await this.Groups.find();
@@ -119,54 +120,59 @@ export class ChatService {
       relations: ["user", "group"],
     });
   }
-  async sendJoinedUserMessages(message: JoinedUserMessagesDto) {
-    let Message = await this.joinedUserMessages.save(message);
-    setTimeout(async () => {
-      await this.joinedUserMessages.delete(Message);
-    }, 15000);
-    return Message;
-  }
-  async getJoinedMessages() {
-    return await this.joinedUserMessages.find();
-  }
-  async sendLeftUserMessage(data: any) {
-    let message = await this.LeftUsersMessage.save(data);
-    setTimeout(async () => {
-      await this.LeftUsersMessage.delete(message);
-    }, 15000);
-    return message;
-  }
-  async getLeftMessages() {
-    return await this.LeftUsersMessage.find();
-  }
+  // async sendJoinedUserMessages(message: JoinedUserMessagesDto) {
+  //   let Message = await this.joinedUserMessages.save(message);
+  //   setTimeout(async () => {
+  //     await this.joinedUserMessages.delete(Message);
+  //   }, 15000);
+  //   return Message;
+  // }
+  // async getJoinedMessages() {
+  //   return await this.joinedUserMessages.find();
+  // }
+  // async sendLeftUserMessage(data: any) {
+  //   let message = await this.LeftUsersMessage.save(data);
+  //   setTimeout(async () => {
+  //     await this.LeftUsersMessage.delete(message);
+  //   }, 15000);
+  //   return message;
+  // }
+  // async getLeftMessages() {
+  //   return await this.LeftUsersMessage.find();
+  // }
   async createUser(data: any) {
     let user = await this.users.save({
       username: data.data.to_email,
       type: 0,
       verification: 0,
       password: "",
-      token: data.token,
+      token: data.token
     });
     data.data.groups.map(async (group: string) => {
       await this.group_user.save({ group: group, user: user.id });
     });
     return user;
   }
+  async updateUser(data: any) {
+    let currUser = await this.users.find({
+      where: { username: data.data.to_email },
+    });
+    await this.users.update({ id: currUser[0].id }, { token: data.token });
+  }
+
+  async findUserByToken(token: string) {
+    let user = await this.users.findOneBy({ token: token });
+    return await this.group_user.find({
+      where: { user: user.id },
+      relations: { user: true, group: true },
+    });
+  }
+
   async findUser(data: any) {
-    console.log(data);
-    let users = await this.users.find();
-    console.log(users);
-    let user;
-    for (let i = 0; i < users.length; i++) {
-      if(users[i].token === data.token){
-        user = users[i]
-      }
-    }
-    console.log(user);
-    // let newUser = { ...user };
-    // newUser.password = data.password;
-    // await this.users.update(user.id, newUser);
-    // console.log(user);
-    // return user;
+    await this.users.update(
+      { token: data.token },
+      { verification: 1, password: await bcrypt.hash(data.data.password, 10) }
+    );
+    return await this.findUserByToken(data.token);
   }
 }

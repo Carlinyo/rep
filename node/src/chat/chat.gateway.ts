@@ -1,4 +1,3 @@
-import { RawBodyRequest } from "@nestjs/common";
 import {
   SubscribeMessage,
   WebSocketGateway,
@@ -7,19 +6,11 @@ import {
 import { NestGateway } from "@nestjs/websockets/interfaces/nest-gateway.interface";
 import { ChatService } from "./chat.service";
 import { Server, Socket } from "socket.io";
-import { InjectRepository } from "@nestjs/typeorm";
 import { Group_User } from "src/model/group_user.entity";
-import { Group_UserDto } from "src/dto/group_user.dto";
-import { Repository } from "typeorm";
-import { JoinedUserMessagesDto } from "src/dto/joined-user-messages.dto";
 
 @WebSocketGateway({ cors: "*:*", transport: ["websocket"] })
 export class ChatGateway implements NestGateway {
-  constructor(
-    private chatService: ChatService,
-    @InjectRepository(Group_User)
-    private group_user: Repository<RawBodyRequest<Group_UserDto | any>>
-  ) {}
+  constructor(private chatService: ChatService) {}
 
   @WebSocketServer()
   private server: Server;
@@ -65,34 +56,34 @@ export class ChatGateway implements NestGateway {
       socket.broadcast.emit("typing", { from: data.userId, status: "false" });
     }
   }
-  @SubscribeMessage("user")
-  async joinedUsername(socket: Socket, data: JoinedUserMessagesDto) {
-    let date = new Date().getHours() + ":" + new Date().getMinutes();
-    data.date = date;
-    if (data.count === "0") {
-      delete data.count;
-      let Message = await this.chatService.sendJoinedUserMessages(data);
-      let messages = await this.chatService.getJoinedMessages();
-      socket.emit("joinedUser", { message: Message, messages });
-      socket.broadcast.emit("joinedUser", { message: Message, messages });
-    } else {
-      let messages = await this.chatService.getJoinedMessages();
-      socket.emit("joinedUser", { messages });
-      socket.broadcast.emit("joinedUser", { messages });
-    }
-  }
-  @SubscribeMessage("logOutUser")
-  async deleteUser(socket: Socket, data: any) {
-    let date = new Date().getHours() + ":" + new Date().getMinutes();
-    data.date = date;
-    await this.chatService.sendLeftUserMessage(data);
-    let messages = await this.chatService.getLeftMessages();
-    socket.emit("getLeftMessages", messages);
-    socket.broadcast.emit("getLeftMessages", messages);
-    if (data.user) {
-      await this.chatService.LogoutUser(data.user);
-    }
-  }
+  // @SubscribeMessage("user")
+  // async joinedUsername(socket: Socket, data: JoinedUserMessagesDto) {
+  //   let date = new Date().getHours() + ":" + new Date().getMinutes();
+  //   data.date = date;
+  //   if (data.count === "0") {
+  //     delete data.count;
+  //     let Message = await this.chatService.sendJoinedUserMessages(data);
+  //     let messages = await this.chatService.getJoinedMessages();
+  //     socket.emit("joinedUser", { message: Message, messages });
+  //     socket.broadcast.emit("joinedUser", { message: Message, messages });
+  //   } else {
+  //     let messages = await this.chatService.getJoinedMessages();
+  //     socket.emit("joinedUser", { messages });
+  //     socket.broadcast.emit("joinedUser", { messages });
+  //   }
+  // }
+  // @SubscribeMessage("logOutUser")
+  // async deleteUser(socket: Socket, data: any) {
+  //   let date = new Date().getHours() + ":" + new Date().getMinutes();
+  //   data.date = date;
+  //   await this.chatService.sendLeftUserMessage(data);
+  //   let messages = await this.chatService.getLeftMessages();
+  //   socket.emit("getLeftMessages", messages);
+  //   socket.broadcast.emit("getLeftMessages", messages);
+  //   if (data.user) {
+  //     await this.chatService.LogoutUser(data.user);
+  //   }
+  // }
   @SubscribeMessage("login")
   async login(socket: Socket, data: any) {
     await this.chatService.findUser(data);
@@ -104,11 +95,14 @@ export class ChatGateway implements NestGateway {
       users.every((el: Group_User) => el.user.username !== data.data.to_email)
     ) {
       await this.chatService.createUser(data);
+    } else {
+      await this.chatService.updateUser(data);
     }
   }
+  @SubscribeMessage("getUserByToken")
+  async getUserByToken(socket: Socket, data: string) {
+    let user = await this.chatService.findUserByToken(data);
+    user = user.sort((a: any, b: any) => a.id - b.id);
+    socket.emit("userByToken", user);
+  }
 }
-
-//update token nor inviti jamanak (kam chtoxnel 1 ic avel invite uxarkel)
-//redirect nery
-//chateri ejy
-//chatery

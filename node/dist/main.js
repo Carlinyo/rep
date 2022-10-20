@@ -205,18 +205,18 @@ exports.AppModule = void 0;
 const common_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(7);
 const app_controller_1 = __webpack_require__(8);
-const app_service_1 = __webpack_require__(18);
+const app_service_1 = __webpack_require__(17);
 const messages_entity_1 = __webpack_require__(14);
 const user_entity_1 = __webpack_require__(13);
-const home_controller_1 = __webpack_require__(19);
-const home_module_1 = __webpack_require__(20);
+const home_controller_1 = __webpack_require__(18);
+const home_module_1 = __webpack_require__(19);
 const groups_entity_1 = __webpack_require__(12);
 const groupmessages_entity_1 = __webpack_require__(10);
 const chat_service_1 = __webpack_require__(9);
-const chat_module_1 = __webpack_require__(22);
+const chat_module_1 = __webpack_require__(21);
 const group_user_entity_1 = __webpack_require__(15);
-const joined_user_emtity_1 = __webpack_require__(16);
-const letf_users_entity_1 = __webpack_require__(17);
+const joined_user_emtity_1 = __webpack_require__(22);
+const letf_users_entity_1 = __webpack_require__(23);
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -325,7 +325,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatService = void 0;
 const common_1 = __webpack_require__(6);
@@ -333,19 +333,16 @@ const typeorm_1 = __webpack_require__(7);
 const groupmessages_entity_1 = __webpack_require__(10);
 const groups_entity_1 = __webpack_require__(12);
 const group_user_entity_1 = __webpack_require__(15);
-const joined_user_emtity_1 = __webpack_require__(16);
-const letf_users_entity_1 = __webpack_require__(17);
 const messages_entity_1 = __webpack_require__(14);
 const user_entity_1 = __webpack_require__(13);
+const bcrypt = __webpack_require__(16);
 let ChatService = class ChatService {
-    constructor(users, group_user, gMessages, messages, Groups, joinedUserMessages, LeftUsersMessage) {
+    constructor(users, group_user, gMessages, messages, Groups) {
         this.users = users;
         this.group_user = group_user;
         this.gMessages = gMessages;
         this.messages = messages;
         this.Groups = Groups;
-        this.joinedUserMessages = joinedUserMessages;
-        this.LeftUsersMessage = LeftUsersMessage;
     }
     async sendGroupMessage(body) {
         let Message = await this.messages.save(body.message);
@@ -354,12 +351,6 @@ let ChatService = class ChatService {
             from: body.from,
             group: body.group,
         });
-    }
-    async LogoutUser(id) {
-        let groupUser = await this.group_user.findOne({ where: { user: +id } });
-        if (groupUser) {
-            await this.group_user.delete(groupUser);
-        }
     }
     async getUser(id) {
         return await this.users.find({ where: { id: id } });
@@ -375,7 +366,7 @@ let ChatService = class ChatService {
         let groupUsers = groupMessages
             .filter((el) => el.group.id === +id)
             .sort((a, b) => b.id > a.id);
-        let users = await this.users.find({ where: { group: +id } });
+        let users = await this.group_user.find({ where: { group: +id }, relations: ['user', 'group'] });
         return { messages: groupUsers, users: users };
     }
     async getGroups() {
@@ -386,50 +377,35 @@ let ChatService = class ChatService {
             relations: ["user", "group"],
         });
     }
-    async sendJoinedUserMessages(message) {
-        let Message = await this.joinedUserMessages.save(message);
-        setTimeout(async () => {
-            await this.joinedUserMessages.delete(Message);
-        }, 15000);
-        return Message;
-    }
-    async getJoinedMessages() {
-        return await this.joinedUserMessages.find();
-    }
-    async sendLeftUserMessage(data) {
-        let message = await this.LeftUsersMessage.save(data);
-        setTimeout(async () => {
-            await this.LeftUsersMessage.delete(message);
-        }, 15000);
-        return message;
-    }
-    async getLeftMessages() {
-        return await this.LeftUsersMessage.find();
-    }
     async createUser(data) {
         let user = await this.users.save({
             username: data.data.to_email,
             type: 0,
             verification: 0,
             password: "",
-            token: data.token,
+            token: data.token
         });
         data.data.groups.map(async (group) => {
             await this.group_user.save({ group: group, user: user.id });
         });
         return user;
     }
+    async updateUser(data) {
+        let currUser = await this.users.find({
+            where: { username: data.data.to_email },
+        });
+        await this.users.update({ id: currUser[0].id }, { token: data.token });
+    }
+    async findUserByToken(token) {
+        let user = await this.users.findOneBy({ token: token });
+        return await this.group_user.find({
+            where: { user: user.id },
+            relations: { user: true, group: true },
+        });
+    }
     async findUser(data) {
-        console.log(data);
-        let users = await this.users.find();
-        console.log(users);
-        let user;
-        for (let i = 0; i < users.length; i++) {
-            if (users[i].token === data.token) {
-                user = users[i];
-            }
-        }
-        console.log(user);
+        await this.users.update({ token: data.token }, { verification: 1, password: await bcrypt.hash(data.data.password, 10) });
+        return await this.findUserByToken(data.token);
     }
 };
 ChatService = __decorate([
@@ -439,9 +415,7 @@ ChatService = __decorate([
     __param(2, (0, typeorm_1.InjectRepository)(groupmessages_entity_1.GroupsMessages)),
     __param(3, (0, typeorm_1.InjectRepository)(messages_entity_1.Messages)),
     __param(4, (0, typeorm_1.InjectRepository)(groups_entity_1.groups)),
-    __param(5, (0, typeorm_1.InjectRepository)(joined_user_emtity_1.JoinedUserMessage)),
-    __param(6, (0, typeorm_1.InjectRepository)(letf_users_entity_1.LeftUsers)),
-    __metadata("design:paramtypes", [Object, Object, Object, Object, Object, Object, Object])
+    __metadata("design:paramtypes", [Object, Object, Object, Object, Object])
 ], ChatService);
 exports.ChatService = ChatService;
 
@@ -675,6 +649,156 @@ exports.Group_User = Group_User;
 
 /***/ }),
 /* 16 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("bcrypt");
+
+/***/ }),
+/* 17 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AppService = void 0;
+const common_1 = __webpack_require__(6);
+let AppService = class AppService {
+};
+AppService = __decorate([
+    (0, common_1.Injectable)()
+], AppService);
+exports.AppService = AppService;
+
+
+/***/ }),
+/* 18 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HomeController = void 0;
+const common_1 = __webpack_require__(6);
+let HomeController = class HomeController {
+    getHomePage() {
+        return 'Im in home page';
+    }
+};
+__decorate([
+    (0, common_1.Get)('/home'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], HomeController.prototype, "getHomePage", null);
+HomeController = __decorate([
+    (0, common_1.Controller)('home')
+], HomeController);
+exports.HomeController = HomeController;
+
+
+/***/ }),
+/* 19 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HomeModule = void 0;
+const common_1 = __webpack_require__(6);
+const home_service_1 = __webpack_require__(20);
+let HomeModule = class HomeModule {
+};
+HomeModule = __decorate([
+    (0, common_1.Module)({
+        providers: [home_service_1.HomeService]
+    })
+], HomeModule);
+exports.HomeModule = HomeModule;
+
+
+/***/ }),
+/* 20 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HomeService = void 0;
+const common_1 = __webpack_require__(6);
+let HomeService = class HomeService {
+};
+HomeService = __decorate([
+    (0, common_1.Injectable)()
+], HomeService);
+exports.HomeService = HomeService;
+
+
+/***/ }),
+/* 21 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ChatModule = void 0;
+const common_1 = __webpack_require__(6);
+const typeorm_1 = __webpack_require__(7);
+const groupmessages_entity_1 = __webpack_require__(10);
+const groups_entity_1 = __webpack_require__(12);
+const group_user_entity_1 = __webpack_require__(15);
+const joined_user_emtity_1 = __webpack_require__(22);
+const letf_users_entity_1 = __webpack_require__(23);
+const messages_entity_1 = __webpack_require__(14);
+const user_entity_1 = __webpack_require__(13);
+const chat_gateway_1 = __webpack_require__(24);
+const chat_service_1 = __webpack_require__(9);
+let ChatModule = class ChatModule {
+};
+ChatModule = __decorate([
+    (0, common_1.Module)({
+        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, groups_entity_1.groups, messages_entity_1.Messages, groupmessages_entity_1.GroupsMessages, group_user_entity_1.Group_User, joined_user_emtity_1.JoinedUserMessage, letf_users_entity_1.LeftUsers])],
+        providers: [chat_service_1.ChatService, chat_gateway_1.ChatGateway],
+    })
+], ChatModule);
+exports.ChatModule = ChatModule;
+
+
+/***/ }),
+/* 22 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -725,7 +849,7 @@ exports.JoinedUserMessage = JoinedUserMessage;
 
 
 /***/ }),
-/* 17 */
+/* 23 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -775,30 +899,7 @@ exports.LeftUsers = LeftUsers;
 
 
 /***/ }),
-/* 18 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AppService = void 0;
-const common_1 = __webpack_require__(6);
-let AppService = class AppService {
-};
-AppService = __decorate([
-    (0, common_1.Injectable)()
-], AppService);
-exports.AppService = AppService;
-
-
-/***/ }),
-/* 19 */
+/* 24 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -812,143 +913,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.HomeController = void 0;
-const common_1 = __webpack_require__(6);
-let HomeController = class HomeController {
-    getHomePage() {
-        return 'Im in home page';
-    }
-};
-__decorate([
-    (0, common_1.Get)('/home'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], HomeController.prototype, "getHomePage", null);
-HomeController = __decorate([
-    (0, common_1.Controller)('home')
-], HomeController);
-exports.HomeController = HomeController;
-
-
-/***/ }),
-/* 20 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.HomeModule = void 0;
-const common_1 = __webpack_require__(6);
-const home_service_1 = __webpack_require__(21);
-let HomeModule = class HomeModule {
-};
-HomeModule = __decorate([
-    (0, common_1.Module)({
-        providers: [home_service_1.HomeService]
-    })
-], HomeModule);
-exports.HomeModule = HomeModule;
-
-
-/***/ }),
-/* 21 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.HomeService = void 0;
-const common_1 = __webpack_require__(6);
-let HomeService = class HomeService {
-};
-HomeService = __decorate([
-    (0, common_1.Injectable)()
-], HomeService);
-exports.HomeService = HomeService;
-
-
-/***/ }),
-/* 22 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ChatModule = void 0;
-const common_1 = __webpack_require__(6);
-const typeorm_1 = __webpack_require__(7);
-const groupmessages_entity_1 = __webpack_require__(10);
-const groups_entity_1 = __webpack_require__(12);
-const group_user_entity_1 = __webpack_require__(15);
-const joined_user_emtity_1 = __webpack_require__(16);
-const letf_users_entity_1 = __webpack_require__(17);
-const messages_entity_1 = __webpack_require__(14);
-const user_entity_1 = __webpack_require__(13);
-const chat_gateway_1 = __webpack_require__(23);
-const chat_service_1 = __webpack_require__(9);
-let ChatModule = class ChatModule {
-};
-ChatModule = __decorate([
-    (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, groups_entity_1.groups, messages_entity_1.Messages, groupmessages_entity_1.GroupsMessages, group_user_entity_1.Group_User, joined_user_emtity_1.JoinedUserMessage, letf_users_entity_1.LeftUsers])],
-        providers: [chat_service_1.ChatService, chat_gateway_1.ChatGateway],
-    })
-], ChatModule);
-exports.ChatModule = ChatModule;
-
-
-/***/ }),
-/* 23 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatGateway = void 0;
-const websockets_1 = __webpack_require__(24);
+const websockets_1 = __webpack_require__(25);
 const chat_service_1 = __webpack_require__(9);
-const socket_io_1 = __webpack_require__(25);
-const typeorm_1 = __webpack_require__(7);
-const group_user_entity_1 = __webpack_require__(15);
-const typeorm_2 = __webpack_require__(11);
-const joined_user_messages_dto_1 = __webpack_require__(26);
+const socket_io_1 = __webpack_require__(26);
 let ChatGateway = class ChatGateway {
-    constructor(chatService, group_user) {
+    constructor(chatService) {
         this.chatService = chatService;
-        this.group_user = group_user;
     }
     afterInit(server) { }
     async handleConnection(socket) { }
@@ -981,33 +954,6 @@ let ChatGateway = class ChatGateway {
             socket.broadcast.emit("typing", { from: data.userId, status: "false" });
         }
     }
-    async joinedUsername(socket, data) {
-        let date = new Date().getHours() + ":" + new Date().getMinutes();
-        data.date = date;
-        if (data.count === "0") {
-            delete data.count;
-            let Message = await this.chatService.sendJoinedUserMessages(data);
-            let messages = await this.chatService.getJoinedMessages();
-            socket.emit("joinedUser", { message: Message, messages });
-            socket.broadcast.emit("joinedUser", { message: Message, messages });
-        }
-        else {
-            let messages = await this.chatService.getJoinedMessages();
-            socket.emit("joinedUser", { messages });
-            socket.broadcast.emit("joinedUser", { messages });
-        }
-    }
-    async deleteUser(socket, data) {
-        let date = new Date().getHours() + ":" + new Date().getMinutes();
-        data.date = date;
-        await this.chatService.sendLeftUserMessage(data);
-        let messages = await this.chatService.getLeftMessages();
-        socket.emit("getLeftMessages", messages);
-        socket.broadcast.emit("getLeftMessages", messages);
-        if (data.user) {
-            await this.chatService.LogoutUser(data.user);
-        }
-    }
     async login(socket, data) {
         await this.chatService.findUser(data);
     }
@@ -1016,94 +962,82 @@ let ChatGateway = class ChatGateway {
         if (users.every((el) => el.user.username !== data.data.to_email)) {
             await this.chatService.createUser(data);
         }
+        else {
+            await this.chatService.updateUser(data);
+        }
+    }
+    async getUserByToken(socket, data) {
+        let user = await this.chatService.findUserByToken(data);
+        user = user.sort((a, b) => a.id - b.id);
+        socket.emit("userByToken", user);
     }
 };
 __decorate([
     (0, websockets_1.WebSocketServer)(),
-    __metadata("design:type", typeof (_c = typeof socket_io_1.Server !== "undefined" && socket_io_1.Server) === "function" ? _c : Object)
+    __metadata("design:type", typeof (_b = typeof socket_io_1.Server !== "undefined" && socket_io_1.Server) === "function" ? _b : Object)
 ], ChatGateway.prototype, "server", void 0);
 __decorate([
     (0, websockets_1.SubscribeMessage)("getUsers"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _d : Object]),
+    __metadata("design:paramtypes", [typeof (_c = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _c : Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "getUsers", null);
 __decorate([
     (0, websockets_1.SubscribeMessage)("getGroups"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _e : Object]),
+    __metadata("design:paramtypes", [typeof (_d = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _d : Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "getGroups", null);
 __decorate([
     (0, websockets_1.SubscribeMessage)("groupMessage"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _f : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_e = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _e : Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "getGroupMessage", null);
 __decorate([
     (0, websockets_1.SubscribeMessage)("input"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_g = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _g : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_f = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _f : Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "onInput", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)("user"),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_h = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _h : Object, typeof (_j = typeof joined_user_messages_dto_1.JoinedUserMessagesDto !== "undefined" && joined_user_messages_dto_1.JoinedUserMessagesDto) === "function" ? _j : Object]),
-    __metadata("design:returntype", Promise)
-], ChatGateway.prototype, "joinedUsername", null);
-__decorate([
-    (0, websockets_1.SubscribeMessage)("logOutUser"),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_k = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _k : Object, Object]),
-    __metadata("design:returntype", Promise)
-], ChatGateway.prototype, "deleteUser", null);
-__decorate([
     (0, websockets_1.SubscribeMessage)("login"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_l = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _l : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_g = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _g : Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "login", null);
 __decorate([
     (0, websockets_1.SubscribeMessage)("createUser"),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_m = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _m : Object, Object]),
+    __metadata("design:paramtypes", [typeof (_h = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _h : Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "createUser", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)("getUserByToken"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_j = typeof socket_io_1.Socket !== "undefined" && socket_io_1.Socket) === "function" ? _j : Object, String]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "getUserByToken", null);
 ChatGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({ cors: "*:*", transport: ["websocket"] }),
-    __param(1, (0, typeorm_1.InjectRepository)(group_user_entity_1.Group_User)),
-    __metadata("design:paramtypes", [typeof (_a = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof chat_service_1.ChatService !== "undefined" && chat_service_1.ChatService) === "function" ? _a : Object])
 ], ChatGateway);
 exports.ChatGateway = ChatGateway;
 
-
-/***/ }),
-/* 24 */
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("@nestjs/websockets");
 
 /***/ }),
 /* 25 */
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("socket.io");
+module.exports = require("@nestjs/websockets");
 
 /***/ }),
 /* 26 */
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((module) => {
 
 "use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.JoinedUserMessagesDto = void 0;
-class JoinedUserMessagesDto {
-}
-exports.JoinedUserMessagesDto = JoinedUserMessagesDto;
-
+module.exports = require("socket.io");
 
 /***/ }),
 /* 27 */
@@ -1174,7 +1108,7 @@ module.exports = require("cors");
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("19bc6f899c74a08006a5")
+/******/ 		__webpack_require__.h = () => ("b909a32800167b237888")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
