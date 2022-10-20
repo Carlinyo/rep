@@ -5,7 +5,6 @@ import { io } from "socket.io-client";
 import { getGroups, getUsers } from "../../store/reducers/chatReducer";
 import {
   findUsersCount,
-  gmailHashLinkGenerator,
   hashLinkGenerator,
   useAppDispatch,
   useAppSelector,
@@ -16,6 +15,7 @@ const AdminComponent = () => {
   const dispatch = useAppDispatch();
   const { groups, users } = useAppSelector((state) => state.ChatR);
   const socket = io("http://localhost:5001");
+  const [createdUser, setCreatedUser] = useState();
   const [isConnected, setIsConnected] = useState(socket.connected);
   const {
     register,
@@ -34,6 +34,7 @@ const AdminComponent = () => {
     socket.on("getGroups", (groups) => {
       dispatch(getGroups(groups));
     });
+
     socket.on("disconnect", () => {
       setIsConnected(false);
     });
@@ -52,6 +53,7 @@ const AdminComponent = () => {
           let token = hashLinkGenerator();
           data.link =
             "http://localhost:3000/login/" + data.to_email + "?token=" + token;
+            console.log(data)
           socket.emit("createUser", { data, token });
           emailjs
             .send(
@@ -68,7 +70,6 @@ const AdminComponent = () => {
                 console.error("Error", error);
               }
             );
-          console.log(data);
         })}
       >
         <div className="form-group pb-3">

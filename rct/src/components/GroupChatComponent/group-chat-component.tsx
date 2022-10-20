@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
-import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../utils/helpers";
 import GroupChatStyles from "./style.module.css";
 import io from "socket.io-client";
@@ -10,7 +9,7 @@ import LeftMessages from "../leftMessages/left-messages";
 import RightMessages from "../rightMessages/right-messages";
 import { getGroupData } from "../../store/reducers/chatReducer";
 
-const GroupChatComponent = () => {
+const GroupChatComponent: React.FC<any> = ({ id }) => {
   const [active, setActive] = useState(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const socket = io("http://localhost:5001");
@@ -20,24 +19,20 @@ const GroupChatComponent = () => {
     reset,
     formState: {},
   } = useForm();
-  const { id } = useParams();
   const { groupData } = useAppSelector((state) => state.ChatR);
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [isConnected, setIsConnected] = useState(socket.connected);
-  const [joinedUsers, setJoinedUsers] = useState<JoinedUserMessage[]>([]);
-  const [leftUsers, setLeftUsers] = useState([]);
   useEffect(() => {
     socket.on("connect", () => {
       setIsConnected(true);
       socket.emit("message", id);
       socket.emit("groupMessage", { id, status: 100 });
-      socket.emit("user", {
-        message: localStorage.getItem("username") + " is joined",
-        user: localStorage.getItem("userId"),
-        group: id,
-        count: localStorage.getItem("count"),
-      });
+      // socket.emit("user", {
+      //   message: localStorage.getItem("username") + " is joined",
+      //   user: localStorage.getItem("userId"),
+      //   group: id,
+      //   count: localStorage.getItem("count"),
+      // });
     });
     socket.on("typing", (data) => {
       if (
@@ -52,17 +47,17 @@ const GroupChatComponent = () => {
     socket.on("groupData", (data) => {
       dispatch(getGroupData(data));
     });
-    socket.on("joinedUser", (data) => {
-      if (data) {
-        setJoinedUsers(data.messages);
-        localStorage.setItem("count", "1");
-      }
-    });
-    socket.on("getLeftMessages", (data) => {
-      if (data) {
-        setLeftUsers(data);
-      }
-    });
+    // socket.on("joinedUser", (data) => {
+    //   if (data) {
+    //     setJoinedUsers(data.messages);
+    //     localStorage.setItem("count", "1");
+    //   }
+    // });
+    // socket.on("getLeftMessages", (data) => {
+    //   if (data) {
+    //     setLeftUsers(data);
+    //   }
+    // });
     socket.on("disconnect", () => {
       setIsConnected(false);
     });
@@ -70,9 +65,9 @@ const GroupChatComponent = () => {
       socket.off("connect");
       socket.off("typing");
       socket.off("groupData");
-      socket.off("joinedUser");
-      socket.off('getLeftMessages')
-      socket.off("disconnect");
+      // socket.off("joinedUser");
+      // socket.off("getLeftMessages");
+      socket.off("disconnect")
     };
   }, []);
   return (
@@ -80,21 +75,21 @@ const GroupChatComponent = () => {
       <div className={GroupChatStyles.container}>
         <div className={GroupChatStyles.chat}>
           <div className={GroupChatStyles.title}>
-            <button
+            {/* <button
               onClick={() => {
                 socket.emit("logOutUser", {
                   group: id,
                   user: localStorage.getItem("userId"),
-                  message: localStorage.getItem("username") + " left",
-                });
+                  message: localStorage.getItem("username") + " left"
+                })
                 navigate("/");
               }}
             >
               Log Out
-            </button>
+            </button> */}
           </div>
           <div className={GroupChatStyles.messagesBody}>
-            {joinedUsers.map((user: JoinedUserMessage, index: number) => {
+            {/* {joinedUsers.map((user: JoinedUserMessage, index: number) => {
               return (
                 <div key={index}>
                   <p>{user.message}</p>
@@ -111,7 +106,7 @@ const GroupChatComponent = () => {
                   </div>
                 </>
               );
-            })}
+            })} */}
             {groupData?.messages?.map(
               (message: GroupMessages, index: number) => {
                 let Message: any = message.message;
@@ -177,9 +172,9 @@ const GroupChatComponent = () => {
                 from: localStorage.getItem("userId"),
                 message,
                 group: id,
-              };
-              socket.emit("groupMessage", groupMessage);
-              reset();
+              }
+              socket.emit("groupMessage", groupMessage)
+              reset()
             })}
             className={GroupChatStyles.send_form}
           >

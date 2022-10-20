@@ -1,0 +1,34 @@
+.container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 80%;
+  height: 100vh;
+  margin: 20px;
+}
+
+.parentContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.openChats {
+  display: flex;
+  gap: 5px;
+}
+
+.chatButton {
+  background-color: grey;
+  display: flex;
+  color: white;
+  border-radius: 10px;
+  height: 50px;
+  padding: 10px;
+  padding-left: 30px;
+  font-size: 17px;
+  border: none;
+}
+
+.canvas{
+  width:100%;
+}

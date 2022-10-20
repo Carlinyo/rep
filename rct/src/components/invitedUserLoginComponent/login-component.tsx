@@ -2,9 +2,10 @@ import { useForm } from "react-hook-form";
 import LoginComponentStyles from "./style.module.css";
 import { io } from "socket.io-client";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const LoginComponent = () => {
+  const navigate = useNavigate();
   const [query] = useSearchParams();
   const socket = io("http://localhost:5001");
   const {
@@ -14,6 +15,7 @@ const LoginComponent = () => {
   } = useForm();
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected);
   useEffect(() => {
+    localStorage.token = query.get("token");
     socket.on("connect", () => {
       setIsConnected(true);
     });
@@ -22,6 +24,7 @@ const LoginComponent = () => {
     });
     return () => {
       socket.off("connect");
+      socket.off("loginedUser");
       socket.off("disconnect");
     };
   }, []);
@@ -32,6 +35,7 @@ const LoginComponent = () => {
         onSubmit={handleSubmit((data) => {
           if (data.password === data.passwordConfirm) {
             socket.emit("login", { data, token: query.get("token") });
+            navigate("/chats");
           }
         })}
       >
